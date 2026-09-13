@@ -1,7 +1,7 @@
 package br.app.coeur.authentication.infrastructure.security;
 
-import br.app.coeur.authentication.application.abstractions.TokenService;
-import br.app.coeur.users.application.dto.UserResponse;
+import br.app.coeur.authentication.security.TokenService;
+import br.app.coeur.users.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;

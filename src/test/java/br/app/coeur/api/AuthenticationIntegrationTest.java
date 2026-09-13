@@ -1,9 +1,9 @@
 package br.app.coeur.api;
 
-import br.app.coeur.authentication.application.usecase.login.LoginRequest;
-import br.app.coeur.authentication.application.usecase.refresh.RefreshRequest;
-import br.app.coeur.users.application.usecase.register.UserRegisterRequest;
-import br.app.coeur.users.application.usecase.update.UserUpdateRequest;
+import br.app.coeur.authentication.dto.LoginRequest;
+import br.app.coeur.authentication.dto.RefreshRequest;
+import br.app.coeur.users.dto.UserRegisterRequest;
+import br.app.coeur.users.dto.UserUpdateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

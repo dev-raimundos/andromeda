@@ -1,10 +1,10 @@
 package br.app.coeur.authentication.infrastructure.controller;
 
-import br.app.coeur.authentication.application.usecase.login.LoginRequest;
-import br.app.coeur.authentication.application.usecase.refresh.RefreshRequest;
-import br.app.coeur.authentication.application.dto.TokenResponse;
-import br.app.coeur.authentication.application.usecase.login.AuthenticateUserUseCase;
-import br.app.coeur.authentication.application.usecase.refresh.RefreshTokenUseCase;
+import br.app.coeur.authentication.dto.LoginRequest;
+import br.app.coeur.authentication.dto.RefreshRequest;
+import br.app.coeur.authentication.dto.TokenResponse;
+import br.app.coeur.authentication.usecase.AuthenticateUserUseCase;
+import br.app.coeur.authentication.usecase.RefreshTokenUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
