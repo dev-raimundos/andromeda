@@ -1,6 +1,6 @@
-package br.app.coeur.users.infrastructure.controller;
+package br.app.coeur.users.controller;
 
-import br.app.coeur.users.application.UserAppService;
+import br.app.coeur.users.service.UserAppService;
 import br.app.coeur.users.dto.UserRegisterRequest;
 import br.app.coeur.users.dto.UserResponse;
 import br.app.coeur.users.dto.UserUpdateRequest;

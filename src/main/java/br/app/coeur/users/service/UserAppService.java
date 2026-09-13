@@ -1,4 +1,4 @@
-package br.app.coeur.users.application;
+package br.app.coeur.users.service;
 
 import br.app.coeur.users.dto.UserRegisterRequest;
 import br.app.coeur.users.dto.UserResponse;

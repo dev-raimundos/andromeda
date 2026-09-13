@@ -5,7 +5,7 @@ import br.app.coeur.authentication.dto.TokenResponse;
 import br.app.coeur.authentication.model.RefreshToken;
 import br.app.coeur.authentication.repository.RefreshTokenRepository;
 import br.app.coeur.authentication.security.TokenService;
-import br.app.coeur.users.application.UserAppService;
+import br.app.coeur.users.service.UserAppService;
 import br.app.coeur.users.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

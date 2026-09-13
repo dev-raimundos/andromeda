@@ -1,4 +1,4 @@
-package br.app.coeur.authentication.infrastructure.controller;
+package br.app.coeur.authentication.controller;
 
 import br.app.coeur.authentication.dto.LoginRequest;
 import br.app.coeur.authentication.dto.RefreshRequest;

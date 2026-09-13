@@ -1,4 +1,4 @@
-package br.app.coeur.authentication.infrastructure.security;
+package br.app.coeur.authentication.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
