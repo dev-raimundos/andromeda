@@ -20,6 +20,7 @@ public class UpdateUserUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new IllegalArgumentException("E-mail já está em uso.");
             }
@@ -35,6 +36,7 @@ public class UpdateUserUseCase {
         }
 
         User savedUser = userRepository.save(user);
+
         return mapToResponse(savedUser);
     }
 
