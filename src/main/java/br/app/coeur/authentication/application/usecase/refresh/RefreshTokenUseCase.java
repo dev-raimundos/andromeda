@@ -1,7 +1,6 @@
-package br.app.coeur.authentication.application.usecase;
+package br.app.coeur.authentication.application.usecase.refresh;
 
 import br.app.coeur.authentication.application.abstractions.TokenService;
-import br.app.coeur.authentication.application.dto.RefreshRequest;
 import br.app.coeur.authentication.application.dto.TokenResponse;
 import br.app.coeur.authentication.domain.RefreshToken;
 import br.app.coeur.authentication.domain.abstractions.RefreshTokenRepository;

@@ -1,7 +1,6 @@
-package br.app.coeur.users.application.usecase;
+package br.app.coeur.users.application.usecase.update;
 
 import br.app.coeur.users.application.dto.UserResponse;
-import br.app.coeur.users.application.dto.UserUpdateRequest;
 import br.app.coeur.users.domain.User;
 import br.app.coeur.users.domain.abstractions.UserRepository;
 import lombok.RequiredArgsConstructor;

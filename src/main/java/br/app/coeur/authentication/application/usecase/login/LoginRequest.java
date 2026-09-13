@@ -1,4 +1,4 @@
-package br.app.coeur.users.application.dto;
+package br.app.coeur.authentication.application.usecase.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,8 +11,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserUpdateRequest {
+public class LoginRequest {
     private String email;
-    private String name;
-    private String roles;
+    private String password;
 }

@@ -1,13 +1,13 @@
 package br.app.coeur.users.application;
 
-import br.app.coeur.users.application.dto.UserRegisterRequest;
+import br.app.coeur.users.application.usecase.register.UserRegisterRequest;
 import br.app.coeur.users.application.dto.UserResponse;
-import br.app.coeur.users.application.dto.UserUpdateRequest;
+import br.app.coeur.users.application.usecase.update.UserUpdateRequest;
 import br.app.coeur.users.application.usecase.DeleteUserUseCase;
 import br.app.coeur.users.application.usecase.FindUserByIdUseCase;
 import br.app.coeur.users.application.usecase.ListUsersUseCase;
-import br.app.coeur.users.application.usecase.RegisterUserUseCase;
-import br.app.coeur.users.application.usecase.UpdateUserUseCase;
+import br.app.coeur.users.application.usecase.register.RegisterUserUseCase;
+import br.app.coeur.users.application.usecase.update.UpdateUserUseCase;
 import br.app.coeur.users.application.usecase.VerifyUserCredentialsUseCase;
 import br.app.coeur.users.domain.abstractions.UserRepository;
 import lombok.RequiredArgsConstructor;

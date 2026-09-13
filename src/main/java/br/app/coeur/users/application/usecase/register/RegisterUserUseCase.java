@@ -1,6 +1,5 @@
-package br.app.coeur.users.application.usecase;
+package br.app.coeur.users.application.usecase.register;
 
-import br.app.coeur.users.application.dto.UserRegisterRequest;
 import br.app.coeur.users.application.dto.UserResponse;
 import br.app.coeur.users.domain.User;
 import br.app.coeur.users.domain.abstractions.PasswordHasher;

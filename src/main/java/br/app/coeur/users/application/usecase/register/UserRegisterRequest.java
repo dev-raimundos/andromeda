@@ -1,4 +1,4 @@
-package br.app.coeur.users.application.dto;
+package br.app.coeur.users.application.usecase.register;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

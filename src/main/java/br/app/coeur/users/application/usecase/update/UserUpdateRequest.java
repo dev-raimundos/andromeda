@@ -1,4 +1,4 @@
-package br.app.coeur.authentication.application.dto;
+package br.app.coeur.users.application.usecase.update;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +11,8 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefreshRequest {
-    private String refreshToken;
+public class UserUpdateRequest {
+    private String email;
+    private String name;
+    private String roles;
 }

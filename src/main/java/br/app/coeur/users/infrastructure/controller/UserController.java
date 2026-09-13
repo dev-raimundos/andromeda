@@ -1,9 +1,9 @@
 package br.app.coeur.users.infrastructure.controller;
 
 import br.app.coeur.users.application.UserAppService;
-import br.app.coeur.users.application.dto.UserRegisterRequest;
+import br.app.coeur.users.application.usecase.register.UserRegisterRequest;
 import br.app.coeur.users.application.dto.UserResponse;
-import br.app.coeur.users.application.dto.UserUpdateRequest;
+import br.app.coeur.users.application.usecase.update.UserUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
