@@ -1,9 +1,25 @@
 services:
-  postgres:
-    image: 'postgres:latest'
-    environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+  redis:
+    image: 'redis:alpine'
     ports:
-      - '5432'
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  app:
+    build: .
+    ports:
+      - '8080:8080'
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-jdbc:postgresql://host.docker.internal:5432/mydatabase}
+      - DATABASE_USERNAME=${DATABASE_USERNAME:-myuser}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-secret}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  redis_data:
