@@ -1,4 +1,6 @@
-package br.app.coeur.authentication.domain;
+package br.app.coeur.authentication.domain.abstractions;
+
+import br.app.coeur.authentication.domain.RefreshToken;
 
 import java.util.Optional;
 

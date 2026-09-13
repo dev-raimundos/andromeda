@@ -1,4 +1,4 @@
-package br.app.coeur.users.domain;
+package br.app.coeur.users.domain.abstractions;
 
 public interface PasswordHasher {
     String hash(String password);

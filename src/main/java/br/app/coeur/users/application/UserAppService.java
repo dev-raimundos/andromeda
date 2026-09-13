@@ -9,7 +9,7 @@ import br.app.coeur.users.application.usecase.ListUsersUseCase;
 import br.app.coeur.users.application.usecase.RegisterUserUseCase;
 import br.app.coeur.users.application.usecase.UpdateUserUseCase;
 import br.app.coeur.users.application.usecase.VerifyUserCredentialsUseCase;
-import br.app.coeur.users.domain.UserRepository;
+import br.app.coeur.users.domain.abstractions.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

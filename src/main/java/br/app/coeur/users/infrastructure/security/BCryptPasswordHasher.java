@@ -1,6 +1,6 @@
 package br.app.coeur.users.infrastructure.security;
 
-import br.app.coeur.users.domain.PasswordHasher;
+import br.app.coeur.users.domain.abstractions.PasswordHasher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

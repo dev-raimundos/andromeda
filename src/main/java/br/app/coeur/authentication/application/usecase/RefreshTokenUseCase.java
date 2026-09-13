@@ -1,10 +1,10 @@
 package br.app.coeur.authentication.application.usecase;
 
-import br.app.coeur.authentication.application.TokenService;
+import br.app.coeur.authentication.application.abstractions.TokenService;
 import br.app.coeur.authentication.application.dto.RefreshRequest;
 import br.app.coeur.authentication.application.dto.TokenResponse;
 import br.app.coeur.authentication.domain.RefreshToken;
-import br.app.coeur.authentication.domain.RefreshTokenRepository;
+import br.app.coeur.authentication.domain.abstractions.RefreshTokenRepository;
 import br.app.coeur.users.application.UserAppService;
 import br.app.coeur.users.application.dto.UserResponse;
 import lombok.RequiredArgsConstructor;

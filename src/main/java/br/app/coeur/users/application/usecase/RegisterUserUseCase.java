@@ -2,9 +2,9 @@ package br.app.coeur.users.application.usecase;
 
 import br.app.coeur.users.application.dto.UserRegisterRequest;
 import br.app.coeur.users.application.dto.UserResponse;
-import br.app.coeur.users.domain.PasswordHasher;
 import br.app.coeur.users.domain.User;
-import br.app.coeur.users.domain.UserRepository;
+import br.app.coeur.users.domain.abstractions.PasswordHasher;
+import br.app.coeur.users.domain.abstractions.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

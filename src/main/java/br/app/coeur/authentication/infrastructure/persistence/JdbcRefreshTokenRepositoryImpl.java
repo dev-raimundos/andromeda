@@ -1,7 +1,7 @@
 package br.app.coeur.authentication.infrastructure.persistence;
 
 import br.app.coeur.authentication.domain.RefreshToken;
-import br.app.coeur.authentication.domain.RefreshTokenRepository;
+import br.app.coeur.authentication.domain.abstractions.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

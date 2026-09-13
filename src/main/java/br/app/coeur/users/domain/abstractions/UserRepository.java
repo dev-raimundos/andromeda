@@ -1,4 +1,6 @@
-package br.app.coeur.users.domain;
+package br.app.coeur.users.domain.abstractions;
+
+import br.app.coeur.users.domain.User;
 
 import java.util.List;
 import java.util.Optional;
