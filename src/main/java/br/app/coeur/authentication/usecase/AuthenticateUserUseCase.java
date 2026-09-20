@@ -5,7 +5,7 @@ import br.app.coeur.authentication.dto.TokenResponse;
 import br.app.coeur.authentication.model.RefreshToken;
 import br.app.coeur.authentication.repository.RefreshTokenRepository;
 import br.app.coeur.authentication.security.TokenService;
-import br.app.coeur.users.service.UserAppService;
+import br.app.coeur.users.usecase.VerifyUserCredentialsUseCase;
 import br.app.coeur.users.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,14 +18,21 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class AuthenticateUserUseCase {
 
-    private final UserAppService userAppService;
+    private final VerifyUserCredentialsUseCase verifyUserCredentialsUseCase;
     private final TokenService tokenService;
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public TokenResponse execute(LoginRequest request) {
-        UserResponse user = userAppService.authenticate(request.getEmail(), request.getPassword())
-                .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas."));
+        UserResponse user;
+        try {
+            user = verifyUserCredentialsUseCase.execute(request.getEmail(), request.getPassword());
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("bloquead") || e.getMessage().contains("múltiplas tentativas")) {
+                throw e;
+            }
+            throw new IllegalArgumentException("Credenciais inválidas.");
+        }
 
         refreshTokenRepository.revokeAllByUserId(user.getId());
 
