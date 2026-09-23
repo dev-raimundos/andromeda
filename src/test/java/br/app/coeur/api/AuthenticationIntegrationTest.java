@@ -1,9 +1,9 @@
 package br.app.coeur.api;
 
-import br.app.coeur.authentication.dto.LoginRequest;
-import br.app.coeur.authentication.dto.RefreshTokenRequest;
-import br.app.coeur.user.dto.RegisterUserRequest;
-import br.app.coeur.user.dto.UpdateUserRequest;
+import br.app.coeur.modules.authentication.dto.LoginRequest;
+import br.app.coeur.modules.authentication.dto.RefreshTokenRequest;
+import br.app.coeur.modules.user.dto.RegisterUserRequest;
+import br.app.coeur.modules.user.dto.UpdateUserRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,7 +118,7 @@ public class AuthenticationIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(wrongLoginRequest)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error", is("Credenciais inválidas.")));
+                    .andExpect(jsonPath("$.detail", is("Credenciais inválidas.")));
         }
 
         // 3. A 5ª tentativa falha deve ativar o bloqueio temporário
@@ -126,7 +126,7 @@ public class AuthenticationIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(wrongLoginRequest)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("bloqueada")));
+                .andExpect(jsonPath("$.detail", containsString("bloqueada")));
 
         // 4. Tentar logar com a senha CORRETA (deve continuar bloqueado)
         LoginRequest correctLoginRequest = new LoginRequest("lock@coeur.app", "secret123");
@@ -135,7 +135,7 @@ public class AuthenticationIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(correctLoginRequest)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("bloqueada")));
+                .andExpect(jsonPath("$.detail", containsString("bloqueada")));
     }
 
     @Test
@@ -198,11 +198,11 @@ public class AuthenticationIntegrationTest {
                         .header("Authorization", authHeader))
                 .andExpect(status().isNoContent());
 
-        // 7. Obter usuário deletado (deve dar erro 400 Bad Request através da nossa exceção)
+        // 7. Obter usuário deletado (deve dar erro 404 Not Found através da nossa exceção)
         mockMvc.perform(get("/api/users/" + newUserId)
                         .header("Authorization", authHeader))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", is("Usuário não encontrado.")));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail", is("Usuário não encontrado.")));
     }
 
     @Test
