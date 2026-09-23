@@ -8,6 +8,11 @@ spring:
     password: ${DATABASE_PASSWORD:secret}
     driver-class-name: org.postgresql.Driver
 
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+
   flyway:
     enabled: ${FLYWAY_ENABLED:true}
     baseline-on-migrate: true

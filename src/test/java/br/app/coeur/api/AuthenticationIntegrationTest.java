@@ -1,9 +1,9 @@
 package br.app.coeur.api;
 
-import br.app.coeur.authentication.application.usecase.authenticateuser.AuthenticateUserInput;
-import br.app.coeur.authentication.application.usecase.refreshtoken.RefreshTokenInput;
-import br.app.coeur.user.application.usecase.registeruser.RegisterUserInput;
-import br.app.coeur.user.application.usecase.updateuser.UpdateUserInput;
+import br.app.coeur.authentication.dto.LoginRequest;
+import br.app.coeur.authentication.dto.RefreshTokenRequest;
+import br.app.coeur.user.dto.RegisterUserRequest;
+import br.app.coeur.user.dto.UpdateUserRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +33,7 @@ public class AuthenticationIntegrationTest {
     @Test
     public void shouldPerformFullAuthenticationLifecycle() throws Exception {
         // 1. Cadastrar um usuário
-        RegisterUserInput registerRequest = RegisterUserInput.builder()
-                .email("test@coeur.app")
-                .password("secret123")
-                .name("John Doe")
-                .build();
+        RegisterUserRequest registerRequest = new RegisterUserRequest("test@coeur.app", "secret123", "John Doe");
 
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -53,10 +49,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(status().isUnauthorized());
 
         // 3. Fazer login e obter o TokenPair
-        AuthenticateUserInput loginRequest = AuthenticateUserInput.builder()
-                .email("test@coeur.app")
-                .password("secret123")
-                .build();
+        LoginRequest loginRequest = new LoginRequest("test@coeur.app", "secret123");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -80,9 +73,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.name", is("John Doe")));
 
         // 5. Utilizar o refresh token para obter novos tokens
-        RefreshTokenInput refreshRequest = RefreshTokenInput.builder()
-                .refreshToken(refreshToken)
-                .build();
+        RefreshTokenRequest refreshRequest = new RefreshTokenRequest(refreshToken);
 
         MvcResult refreshResult = mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -112,11 +103,7 @@ public class AuthenticationIntegrationTest {
     @Test
     public void shouldLockAccountAfterFiveFailedAttempts() throws Exception {
         // 1. Cadastrar usuário
-        RegisterUserInput registerRequest = RegisterUserInput.builder()
-                .email("lock@coeur.app")
-                .password("secret123")
-                .name("Locked User")
-                .build();
+        RegisterUserRequest registerRequest = new RegisterUserRequest("lock@coeur.app", "secret123", "Locked User");
 
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -124,10 +111,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(status().isCreated());
 
         // 2. Tentar login com senha errada por 4 vezes consecutivas (não deve bloquear ainda)
-        AuthenticateUserInput wrongLoginRequest = AuthenticateUserInput.builder()
-                .email("lock@coeur.app")
-                .password("wrongpassword")
-                .build();
+        LoginRequest wrongLoginRequest = new LoginRequest("lock@coeur.app", "wrongpassword");
 
         for (int i = 0; i < 4; i++) {
             mockMvc.perform(post("/api/auth/login")
@@ -145,10 +129,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.error", containsString("bloqueada")));
 
         // 4. Tentar logar com a senha CORRETA (deve continuar bloqueado)
-        AuthenticateUserInput correctLoginRequest = AuthenticateUserInput.builder()
-                .email("lock@coeur.app")
-                .password("secret123")
-                .build();
+        LoginRequest correctLoginRequest = new LoginRequest("lock@coeur.app", "secret123");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -160,11 +141,7 @@ public class AuthenticationIntegrationTest {
     @Test
     public void shouldPerformFullUserCrud() throws Exception {
         // 1. Cadastrar administrador e obter token para autorização nos endpoints de CRUD
-        RegisterUserInput adminRegister = RegisterUserInput.builder()
-                .email("admin@coeur.app")
-                .password("admin123")
-                .name("Admin User")
-                .build();
+        RegisterUserRequest adminRegister = new RegisterUserRequest("admin@coeur.app", "admin123", "Admin User");
 
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -173,10 +150,7 @@ public class AuthenticationIntegrationTest {
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(AuthenticateUserInput.builder()
-                                .email("admin@coeur.app")
-                                .password("admin123")
-                                .build())))
+                        .content(objectMapper.writeValueAsString(new LoginRequest("admin@coeur.app", "admin123"))))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -184,11 +158,7 @@ public class AuthenticationIntegrationTest {
         String authHeader = "Bearer " + token;
 
         // 2. Criar um novo usuário via CRUD (registrando outro usuário)
-        RegisterUserInput userRequest = RegisterUserInput.builder()
-                .email("crud@coeur.app")
-                .password("crud123")
-                .name("Crud User")
-                .build();
+        RegisterUserRequest userRequest = new RegisterUserRequest("crud@coeur.app", "crud123", "Crud User");
 
         MvcResult createResult = mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -212,11 +182,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))));
 
         // 5. Atualizar dados do usuário
-        UpdateUserInput updateRequest = UpdateUserInput.builder()
-                .name("Crud User Updated")
-                .email("crud_updated@coeur.app")
-                .roles("ROLE_ADMIN")
-                .build();
+        UpdateUserRequest updateRequest = new UpdateUserRequest("crud_updated@coeur.app", "Crud User Updated", "ROLE_ADMIN");
 
         mockMvc.perform(put("/api/users/" + newUserId)
                         .header("Authorization", authHeader)
