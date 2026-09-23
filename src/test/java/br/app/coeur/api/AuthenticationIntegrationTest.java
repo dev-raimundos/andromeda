@@ -1,9 +1,9 @@
 package br.app.coeur.api;
 
-import br.app.coeur.authentication.dto.LoginRequest;
-import br.app.coeur.authentication.dto.RefreshRequest;
-import br.app.coeur.users.dto.UserRegisterRequest;
-import br.app.coeur.users.dto.UserUpdateRequest;
+import br.app.coeur.authentication.application.usecase.authenticateuser.AuthenticateUserInput;
+import br.app.coeur.authentication.application.usecase.refreshtoken.RefreshTokenInput;
+import br.app.coeur.user.application.usecase.registeruser.RegisterUserInput;
+import br.app.coeur.user.application.usecase.updateuser.UpdateUserInput;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ public class AuthenticationIntegrationTest {
     @Test
     public void shouldPerformFullAuthenticationLifecycle() throws Exception {
         // 1. Cadastrar um usuário
-        UserRegisterRequest registerRequest = UserRegisterRequest.builder()
+        RegisterUserInput registerRequest = RegisterUserInput.builder()
                 .email("test@coeur.app")
                 .password("secret123")
                 .name("John Doe")
@@ -53,7 +53,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(status().isUnauthorized());
 
         // 3. Fazer login e obter o TokenPair
-        LoginRequest loginRequest = LoginRequest.builder()
+        AuthenticateUserInput loginRequest = AuthenticateUserInput.builder()
                 .email("test@coeur.app")
                 .password("secret123")
                 .build();
@@ -80,7 +80,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.name", is("John Doe")));
 
         // 5. Utilizar o refresh token para obter novos tokens
-        RefreshRequest refreshRequest = RefreshRequest.builder()
+        RefreshTokenInput refreshRequest = RefreshTokenInput.builder()
                 .refreshToken(refreshToken)
                 .build();
 
@@ -112,7 +112,7 @@ public class AuthenticationIntegrationTest {
     @Test
     public void shouldLockAccountAfterFiveFailedAttempts() throws Exception {
         // 1. Cadastrar usuário
-        UserRegisterRequest registerRequest = UserRegisterRequest.builder()
+        RegisterUserInput registerRequest = RegisterUserInput.builder()
                 .email("lock@coeur.app")
                 .password("secret123")
                 .name("Locked User")
@@ -124,7 +124,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(status().isCreated());
 
         // 2. Tentar login com senha errada por 4 vezes consecutivas (não deve bloquear ainda)
-        LoginRequest wrongLoginRequest = LoginRequest.builder()
+        AuthenticateUserInput wrongLoginRequest = AuthenticateUserInput.builder()
                 .email("lock@coeur.app")
                 .password("wrongpassword")
                 .build();
@@ -145,7 +145,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.error", containsString("bloqueada")));
 
         // 4. Tentar logar com a senha CORRETA (deve continuar bloqueado)
-        LoginRequest correctLoginRequest = LoginRequest.builder()
+        AuthenticateUserInput correctLoginRequest = AuthenticateUserInput.builder()
                 .email("lock@coeur.app")
                 .password("secret123")
                 .build();
@@ -160,7 +160,7 @@ public class AuthenticationIntegrationTest {
     @Test
     public void shouldPerformFullUserCrud() throws Exception {
         // 1. Cadastrar administrador e obter token para autorização nos endpoints de CRUD
-        UserRegisterRequest adminRegister = UserRegisterRequest.builder()
+        RegisterUserInput adminRegister = RegisterUserInput.builder()
                 .email("admin@coeur.app")
                 .password("admin123")
                 .name("Admin User")
@@ -173,7 +173,7 @@ public class AuthenticationIntegrationTest {
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(LoginRequest.builder()
+                        .content(objectMapper.writeValueAsString(AuthenticateUserInput.builder()
                                 .email("admin@coeur.app")
                                 .password("admin123")
                                 .build())))
@@ -184,7 +184,7 @@ public class AuthenticationIntegrationTest {
         String authHeader = "Bearer " + token;
 
         // 2. Criar um novo usuário via CRUD (registrando outro usuário)
-        UserRegisterRequest userRequest = UserRegisterRequest.builder()
+        RegisterUserInput userRequest = RegisterUserInput.builder()
                 .email("crud@coeur.app")
                 .password("crud123")
                 .name("Crud User")
@@ -212,7 +212,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))));
 
         // 5. Atualizar dados do usuário
-        UserUpdateRequest updateRequest = UserUpdateRequest.builder()
+        UpdateUserInput updateRequest = UpdateUserInput.builder()
                 .name("Crud User Updated")
                 .email("crud_updated@coeur.app")
                 .roles("ROLE_ADMIN")
