@@ -19,8 +19,8 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
     }
 
     @Override
-    public RefreshToken save(RefreshToken refreshToken) {
-        return toDomain(jdbcRepository.save(toEntity(refreshToken)));
+    public void save(RefreshToken refreshToken) {
+        jdbcRepository.save(toEntity(refreshToken));
     }
 
     @Override

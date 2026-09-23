@@ -196,7 +196,7 @@ public class AuthenticationIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        Long newUserId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
+        long newUserId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
 
         // 3. Obter usuário pelo ID
         mockMvc.perform(get("/api/users/" + newUserId)

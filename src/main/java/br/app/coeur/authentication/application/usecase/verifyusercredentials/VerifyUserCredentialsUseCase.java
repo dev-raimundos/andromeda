@@ -21,26 +21,33 @@ public class VerifyUserCredentialsUseCase {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = IllegalArgumentException.class)
     public User execute(String email, String rawPassword) {
+
         log.info("[LOGIN] Tentativa de login iniciada para o e-mail: '{}'", email);
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
+        User user = userRepository.findByEmail(email).orElseThrow(
+                () -> {
                     log.warn("[LOGIN] Falha no login: e-mail '{}' não está cadastrado no sistema", email);
                     return new IllegalArgumentException("Credenciais inválidas.");
                 });
 
         Instant now = Instant.now();
+
         if (user.isLocked(now)) {
             log.warn("[LOGIN] Falha no login: conta do usuário '{}' está bloqueada temporariamente até {}", email, user.getLockExpiredAt());
             throw new IllegalArgumentException("Conta temporariamente bloqueada devido a múltiplas tentativas falhas. Tente novamente mais tarde.");
         }
 
         if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+
             log.info("[LOGIN] Login bem-sucedido para o usuário: '{}' (ID: {})", email, user.getId());
+
             user.resetFailedAttempts();
+
             return userRepository.save(user);
         } else {
+
             user.incrementFailedAttempts(now);
+
             userRepository.save(user);
 
             if (user.isLocked(now)) {

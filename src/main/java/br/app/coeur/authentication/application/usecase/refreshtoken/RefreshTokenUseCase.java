@@ -31,12 +31,9 @@ public class RefreshTokenUseCase {
                         () -> new IllegalArgumentException("Refresh token inválido, revogado ou expirado.")
                 );
 
-        User user = userRepository
-                .findById(
-                        oldRefreshToken.getUserId()
-                ).orElseThrow(
-                        () -> new IllegalArgumentException("Usuário não encontrado.")
-                );
+        User user = userRepository.findById(oldRefreshToken.getUserId()).orElseThrow(
+                () -> new IllegalArgumentException("Usuário não encontrado.")
+        );
 
         oldRefreshToken.setRevoked(true);
 
