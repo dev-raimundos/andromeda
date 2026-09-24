@@ -7,6 +7,7 @@ import br.app.coeur.modules.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,7 +33,7 @@ public class UserController {
     )
     @ApiResponse(responseCode = "201", description = "Usuário cadastrado com sucesso")
     @ApiResponse(responseCode = "400", description = "E-mail já está em uso ou payload inválido")
-    public UserResponse register(@RequestBody RegisterUserRequest request) {
+    public UserResponse register(@Valid @RequestBody RegisterUserRequest request) {
         return userService.register(request);
     }
 
@@ -79,7 +80,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso")
     @ApiResponse(responseCode = "400", description = "ID inválido, e-mail já em uso ou dados inconsistentes")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public UserResponse update(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
+    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest request) {
         return userService.update(id, request);
     }
 

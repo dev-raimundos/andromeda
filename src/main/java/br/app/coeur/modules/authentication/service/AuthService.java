@@ -76,7 +76,7 @@ public class AuthService {
                     "Tente novamente mais tarde.");
         }
 
-        if (rawPassword != null && passwordEncoder.matches(rawPassword, user.getPassword())) {
+        if (passwordEncoder.matches(rawPassword, user.getPassword())) {
             log.info("[LOGIN] Login bem-sucedido para o usuário: '{}' (ID: {})", email, user.getId());
             user.registerSuccessfulLogin();
             return user;

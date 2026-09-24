@@ -123,17 +123,6 @@ class AuthServiceTest {
     }
 
     @Test
-    void loginShouldFailWhenPasswordIsNull() {
-        when(userRepository.findByEmail("john@coeur.app")).thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> authService.login(new LoginRequest("john@coeur.app", null)))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Credenciais inválidas.");
-
-        assertThat(user.getFailedAttempts()).isEqualTo(1);
-    }
-
-    @Test
     void loginShouldLockAccountOnFifthFailedAttempt() {
         for (int i = 0; i < User.MAX_FAILED_ATTEMPTS - 1; i++) {
             user.registerFailedLogin(Instant.now());

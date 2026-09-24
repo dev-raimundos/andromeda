@@ -206,6 +206,58 @@ public class AuthenticationIntegrationTest {
     }
 
     @Test
+    public void shouldRejectInvalidPayloadsWithBadRequest() throws Exception {
+        // 1. Cadastro com senha em branco e e-mail inválido
+        mockMvc.perform(post("/api/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RegisterUserRequest("invalid", " ", "John"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.email", is("E-mail inválido.")))
+                .andExpect(jsonPath("$.errors.password", is("Senha é obrigatória.")));
+
+        // 2. Login sem senha
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest("john@coeur.app", null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.password", is("Senha é obrigatória.")));
+
+        // 3. Refresh sem token
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshTokenRequest(null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.refreshToken", is("Refresh token é obrigatório.")));
+
+        // 4. Atualização com campos ausentes (requer autenticação)
+        mockMvc.perform(post("/api/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RegisterUserRequest("valid@coeur.app", "secret123", "Valid User"))))
+                .andExpect(status().isCreated());
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest("valid@coeur.app", "secret123"))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String token = objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("accessToken").asText();
+        long userId = objectMapper.readTree(
+                mockMvc.perform(get("/api/users/me").header("Authorization", "Bearer " + token))
+                        .andReturn().getResponse().getContentAsString()
+        ).get("id").asLong();
+
+        mockMvc.perform(put("/api/users/" + userId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new UpdateUserRequest(null, " ", null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.email", is("E-mail é obrigatório.")))
+                .andExpect(jsonPath("$.errors.name", is("Nome é obrigatório.")))
+                .andExpect(jsonPath("$.errors.roles", is("Perfis são obrigatórios.")));
+    }
+
+    @Test
     public void shouldTriggerRateLimitWhenRequestLimitExceeded() throws Exception {
         // Enviar 30 requisições normais rápidas (limite máximo de tokens configurado é 30 por minuto)
         for (int i = 0; i < 30; i++) {

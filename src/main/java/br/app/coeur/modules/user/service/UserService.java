@@ -1,6 +1,5 @@
 package br.app.coeur.modules.user.service;
 
-import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ConflictException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
 import br.app.coeur.modules.user.domain.User;
@@ -24,10 +23,6 @@ public class UserService {
 
     @Transactional
     public UserResponse register(RegisterUserRequest request) {
-        if (request.password() == null || request.password().isBlank()) {
-            throw new BusinessException("Senha é obrigatória.");
-        }
-
         if (userRepository.existsByEmail(request.email())) {
             throw new ConflictException("E-mail já está em uso.");
         }
@@ -57,23 +52,17 @@ public class UserService {
 
     @Transactional
     public UserResponse update(Long id, UpdateUserRequest request) {
-
         User user = getUser(id);
 
-        if (request.email() != null && !request.email().equals(user.getEmail())) {
+        if (!request.email().equals(user.getEmail())) {
             if (userRepository.existsByEmail(request.email())) {
                 throw new ConflictException("E-mail já está em uso.");
             }
             user.changeEmail(request.email());
         }
+        user.rename(request.name());
 
-        if (request.name() != null) {
-            user.rename(request.name());
-        }
-
-        if (request.roles() != null) {
-            user.changeRoles(request.roles());
-        }
+        user.changeRoles(request.roles());
 
         return UserResponse.from(user);
     }

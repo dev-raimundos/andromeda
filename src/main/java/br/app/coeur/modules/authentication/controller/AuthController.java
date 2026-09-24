@@ -7,6 +7,7 @@ import br.app.coeur.modules.authentication.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +29,7 @@ public class AuthController {
     )
     @ApiResponse(responseCode = "200", description = "Login bem-sucedido")
     @ApiResponse(responseCode = "400", description = "Credenciais inválidas ou conta temporariamente bloqueada")
-    public TokenResponse login(@RequestBody LoginRequest request) {
+    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
 
@@ -39,7 +40,7 @@ public class AuthController {
     )
     @ApiResponse(responseCode = "200", description = "Renovação realizada com sucesso")
     @ApiResponse(responseCode = "400", description = "Refresh token inválido, expirado ou já revogado")
-    public TokenResponse refresh(@RequestBody RefreshTokenRequest request) {
+    public TokenResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
         return authService.refresh(request);
     }
 }

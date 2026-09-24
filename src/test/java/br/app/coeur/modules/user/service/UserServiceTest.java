@@ -1,6 +1,5 @@
 package br.app.coeur.modules.user.service;
 
-import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ConflictException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
 import br.app.coeur.modules.user.domain.User;
@@ -73,15 +72,6 @@ class UserServiceTest {
     }
 
     @Test
-    void registerShouldFailWhenPasswordIsBlank() {
-        assertThatThrownBy(() -> userService.register(new RegisterUserRequest("john@coeur.app", " ", "John")))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Senha é obrigatória.");
-
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
     void findByIdShouldReturnUser() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser()));
 
@@ -126,24 +116,13 @@ class UserServiceTest {
     }
 
     @Test
-    void updateShouldIgnoreNullFields() {
-        User user = existingUser();
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        UserResponse response = userService.update(1L, new UpdateUserRequest(null, null, null));
-
-        assertThat(response.email()).isEqualTo("john@coeur.app");
-        assertThat(response.name()).isEqualTo("John");
-        assertThat(response.roles()).isEqualTo(User.DEFAULT_ROLE);
-    }
-
-    @Test
     void updateShouldNotCheckEmailUniquenessWhenEmailIsUnchanged() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser()));
 
-        userService.update(1L, new UpdateUserRequest("john@coeur.app", "John Updated", null));
+        UserResponse response = userService.update(1L, new UpdateUserRequest("john@coeur.app", "John Updated", User.DEFAULT_ROLE));
 
         verify(userRepository, never()).existsByEmail(any());
+        assertThat(response.name()).isEqualTo("John Updated");
     }
 
     @Test
@@ -152,7 +131,7 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.existsByEmail("taken@coeur.app")).thenReturn(true);
 
-        assertThatThrownBy(() -> userService.update(1L, new UpdateUserRequest("taken@coeur.app", null, null)))
+        assertThatThrownBy(() -> userService.update(1L, new UpdateUserRequest("taken@coeur.app", "John", User.DEFAULT_ROLE)))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("E-mail já está em uso.");
 
@@ -163,7 +142,7 @@ class UserServiceTest {
     void updateShouldFailWhenUserDoesNotExist() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.update(99L, new UpdateUserRequest("a@b.c", null, null)))
+        assertThatThrownBy(() -> userService.update(99L, new UpdateUserRequest("a@b.c", "John", User.DEFAULT_ROLE)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Usuário não encontrado.");
     }
