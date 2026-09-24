@@ -19,38 +19,62 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleResourceNotFound(ResourceNotFoundException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage()
+        );
     }
 
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail handleConflict(ConflictException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                ex.getMessage()
+        );
     }
 
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusiness(BusinessException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage());
     }
 
-    /** Invariantes das entidades de domínio (ex: campos obrigatórios) continuam lançando IllegalArgumentException. */
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage()
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Dados de entrada inválidos.");
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Dados de entrada inválidos."
+        );
+
         Map<String, String> errors = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
+
+        ex.getBindingResult().getFieldErrors().forEach(
+                error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage())
+        );
+
         problem.setProperty("errors", errors);
+
         return problem;
     }
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex) {
+
         log.error("Erro inesperado", ex);
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor.");
+
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Erro interno do servidor."
+        );
     }
 }

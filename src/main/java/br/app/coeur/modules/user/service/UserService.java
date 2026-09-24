@@ -32,9 +32,15 @@ public class UserService {
             throw new ConflictException("E-mail já está em uso.");
         }
 
-        User user = User.register(request.email(), passwordEncoder.encode(request.password()), request.name());
+        User user = User.register(
+                request.email(),
+                passwordEncoder.encode(request.password()),
+                request.name()
+        );
 
-        return UserResponse.from(userRepository.save(user));
+        return UserResponse.from(
+                userRepository.save(user)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -51,6 +57,7 @@ public class UserService {
 
     @Transactional
     public UserResponse update(Long id, UpdateUserRequest request) {
+
         User user = getUser(id);
 
         if (request.email() != null && !request.email().equals(user.getEmail())) {
@@ -73,7 +80,9 @@ public class UserService {
 
     @Transactional
     public void delete(Long id) {
-        userRepository.delete(getUser(id));
+        userRepository.delete(
+                getUser(id)
+        );
     }
 
     private User getUser(Long id) {

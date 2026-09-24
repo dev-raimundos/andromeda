@@ -30,13 +30,12 @@ public class AuthService {
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Sem rollback em BusinessException para que o contador de tentativas falhas
-     * (e o eventual bloqueio da conta) seja persistido junto com o erro.
-     */
     @Transactional(noRollbackFor = BusinessException.class)
     public TokenResponse login(LoginRequest request) {
-        User user = verifyCredentials(request.email(), request.password());
+        User user = verifyCredentials(
+                request.email(),
+                request.password()
+        );
 
         refreshTokenRepository.revokeAllByUserId(user.getId());
 
@@ -59,6 +58,7 @@ public class AuthService {
     }
 
     private User verifyCredentials(String email, String rawPassword) {
+
         log.info("[LOGIN] Tentativa de login iniciada para o e-mail: '{}'", email);
 
         User user = userRepository.findByEmail(email).orElseThrow(
@@ -70,8 +70,10 @@ public class AuthService {
         Instant now = Instant.now();
 
         if (user.isLocked(now)) {
-            log.warn("[LOGIN] Falha no login: conta do usuário '{}' está bloqueada temporariamente até {}", email, user.getLockExpiredAt());
-            throw new BusinessException("Conta temporariamente bloqueada devido a múltiplas tentativas falhas. Tente novamente mais tarde.");
+            log.warn("[LOGIN] Falha no login: conta do usuário '{}' " +
+                    "está bloqueada temporariamente até {}", email, user.getLockExpiredAt());
+            throw new BusinessException("Conta temporariamente bloqueada devido a múltiplas tentativas falhas. " +
+                    "Tente novamente mais tarde.");
         }
 
         if (rawPassword != null && passwordEncoder.matches(rawPassword, user.getPassword())) {
@@ -83,11 +85,13 @@ public class AuthService {
         user.registerFailedLogin(now);
 
         if (user.isLocked(now)) {
-            log.error("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. Limite de tentativas atingido! Conta BLOQUEADA temporariamente até {}", email, user.getLockExpiredAt());
+            log.error("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. " +
+                    "Limite de tentativas atingido! Conta BLOQUEADA temporariamente até {}", email, user.getLockExpiredAt());
             throw new BusinessException("Conta bloqueada temporariamente devido a múltiplas tentativas falhas.");
         }
 
-        log.warn("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. Tentativas falhas consecutivas: {}/{}", email, user.getFailedAttempts(), User.MAX_FAILED_ATTEMPTS);
+        log.warn("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. " +
+                "Tentativas falhas consecutivas: {}/{}", email, user.getFailedAttempts(), User.MAX_FAILED_ATTEMPTS);
         throw new BusinessException("Credenciais inválidas.");
     }
 
@@ -96,7 +100,12 @@ public class AuthService {
         String refreshTokenValue = tokenService.generateRefreshToken();
 
         refreshTokenRepository.save(
-                RefreshToken.issue(refreshTokenValue, user.getId(), Instant.now(), REFRESH_TOKEN_VALIDITY)
+                RefreshToken.issue(
+                        refreshTokenValue,
+                        user.getId(),
+                        Instant.now(),
+                        REFRESH_TOKEN_VALIDITY
+                )
         );
 
         return TokenResponse.bearer(accessToken, refreshTokenValue, tokenService.getAccessTokenExpiresIn());
