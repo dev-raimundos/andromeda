@@ -7,9 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 
@@ -62,6 +65,30 @@ class GlobalExceptionHandlerTest {
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(problem.getProperties()).containsKey("errors");
         assertThat(problem.getProperties().get("errors")).isEqualTo(Map.of("email", "E-mail inválido."));
+    }
+
+    @Test
+    void shouldMapUnreadableMessageToBadRequestWithoutLeakingParserDetails() {
+        HttpMessageNotReadableException ex = new HttpMessageNotReadableException(
+                "JSON parse error: Unexpected character at com.fasterxml.jackson.core.JsonParser",
+                new MockHttpInputMessage(new byte[0]));
+
+        ProblemDetail problem = handler.handleUnreadableMessage(ex);
+
+        assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(problem.getDetail()).isEqualTo("Corpo da requisição ausente ou malformado.");
+    }
+
+    @Test
+    void shouldMapTypeMismatchToBadRequestNamingTheParameter() throws Exception {
+        MethodParameter parameter = new MethodParameter(Long.class.getMethod("valueOf", String.class), 0);
+        MethodArgumentTypeMismatchException ex = new MethodArgumentTypeMismatchException(
+                "abc", Long.class, "id", parameter, new NumberFormatException("For input string: \"abc\""));
+
+        ProblemDetail problem = handler.handleTypeMismatch(ex);
+
+        assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(problem.getDetail()).isEqualTo("Parâmetro 'id' com valor inválido.");
     }
 
     @Test

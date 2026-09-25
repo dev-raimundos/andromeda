@@ -258,6 +258,35 @@ public class AuthenticationIntegrationTest {
     }
 
     @Test
+    public void shouldRejectMalformedRequestsWithBadRequest() throws Exception {
+        // 1. JSON quebrado no body
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\": \"john@coeur.app\", "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail", is("Corpo da requisição ausente ou malformado.")));
+
+        // 2. ID não numérico no path (requer autenticação)
+        mockMvc.perform(post("/api/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RegisterUserRequest("path@coeur.app", "secret123", "Path User"))))
+                .andExpect(status().isCreated());
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest("path@coeur.app", "secret123"))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String token = objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("accessToken").asText();
+
+        mockMvc.perform(get("/api/users/abc")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail", is("Parâmetro 'id' com valor inválido.")));
+    }
+
+    @Test
     public void shouldTriggerRateLimitWhenRequestLimitExceeded() throws Exception {
         // Enviar 30 requisições normais rápidas (limite máximo de tokens configurado é 30 por minuto)
         for (int i = 0; i < 30; i++) {
