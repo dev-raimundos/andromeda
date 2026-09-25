@@ -63,8 +63,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleValidation(new MethodArgumentNotValidException(parameter, bindingResult));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(problem.getProperties()).containsKey("errors");
-        assertThat(problem.getProperties().get("errors")).isEqualTo(Map.of("email", "E-mail inválido."));
+        assertThat(problem.getProperties()).containsEntry("errors", Map.of("email", "E-mail inválido."));
     }
 
     @Test

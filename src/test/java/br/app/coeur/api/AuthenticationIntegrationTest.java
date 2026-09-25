@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AuthenticationIntegrationTest {
+class AuthenticationIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -31,7 +31,7 @@ public class AuthenticationIntegrationTest {
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Test
-    public void shouldPerformFullAuthenticationLifecycle() throws Exception {
+    void shouldPerformFullAuthenticationLifecycle() throws Exception {
         // 1. Cadastrar um usuário
         RegisterUserRequest registerRequest = new RegisterUserRequest("test@coeur.app", "secret123", "John Doe");
 
@@ -101,7 +101,7 @@ public class AuthenticationIntegrationTest {
     }
 
     @Test
-    public void shouldLockAccountAfterFiveFailedAttempts() throws Exception {
+    void shouldLockAccountAfterFiveFailedAttempts() throws Exception {
         // 1. Cadastrar usuário
         RegisterUserRequest registerRequest = new RegisterUserRequest("lock@coeur.app", "secret123", "Locked User");
 
@@ -139,7 +139,7 @@ public class AuthenticationIntegrationTest {
     }
 
     @Test
-    public void shouldPerformFullUserCrud() throws Exception {
+    void shouldPerformFullUserCrud() throws Exception {
         // 1. Cadastrar administrador e obter token para autorização nos endpoints de CRUD
         RegisterUserRequest adminRegister = new RegisterUserRequest("admin@coeur.app", "admin123", "Admin User");
 
@@ -206,7 +206,7 @@ public class AuthenticationIntegrationTest {
     }
 
     @Test
-    public void shouldRejectInvalidPayloadsWithBadRequest() throws Exception {
+    void shouldRejectInvalidPayloadsWithBadRequest() throws Exception {
         // 1. Cadastro com senha em branco e e-mail inválido
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -258,7 +258,7 @@ public class AuthenticationIntegrationTest {
     }
 
     @Test
-    public void shouldRejectMalformedRequestsWithBadRequest() throws Exception {
+    void shouldRejectMalformedRequestsWithBadRequest() throws Exception {
         // 1. JSON quebrado no body
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -287,7 +287,7 @@ public class AuthenticationIntegrationTest {
     }
 
     @Test
-    public void shouldTriggerRateLimitWhenRequestLimitExceeded() throws Exception {
+    void shouldTriggerRateLimitWhenRequestLimitExceeded() throws Exception {
         // Enviar 30 requisições normais rápidas (limite máximo de tokens configurado é 30 por minuto)
         for (int i = 0; i < 30; i++) {
             mockMvc.perform(get("/v3/api-docs"))
