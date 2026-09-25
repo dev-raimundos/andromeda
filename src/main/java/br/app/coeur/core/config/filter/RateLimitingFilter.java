@@ -23,8 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RateLimitingFilter implements Filter {
 
     private final Map<String, TokenBucket> ipBuckets = new ConcurrentHashMap<>();
-
-    // Configuração do Rate Limit: max 30 requisições por minuto por IP para uso geral
     private static final long MAX_TOKENS = 30;
     private static final long REFILL_PERIOD_SECONDS = 60;
 
