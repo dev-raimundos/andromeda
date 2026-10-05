@@ -8,11 +8,11 @@ import br.app.coeur.modules.user.exception.EmailAlreadyInUseException;
 import br.app.coeur.modules.user.exception.UserNotFoundException;
 import br.app.coeur.modules.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @AllArgsConstructor()
@@ -45,10 +45,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponse> findAll() {
-        return userRepository.findAll().stream()
-                .map(UserResponse::from)
-                .toList();
+    public Page<UserResponse> findAll(Pageable pageable) {
+        return userRepository.findAll(pageable).map(UserResponse::from);
     }
 
     @Transactional
