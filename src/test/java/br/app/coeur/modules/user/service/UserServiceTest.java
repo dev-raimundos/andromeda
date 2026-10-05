@@ -13,6 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -92,12 +95,13 @@ class UserServiceTest {
 
     @Test
     void findAllShouldMapAllUsers() {
-        when(userRepository.findAll()).thenReturn(List.of(
-                existingUser(), User.register("mary@coeur.app", "encoded", "Mary")));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(userRepository.findAll(pageable)).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(
+                existingUser(), User.register("mary@coeur.app", "encoded", "Mary"))));
 
-        List<UserResponse> responses = userService.findAll();
+        Page<UserResponse> responses = userService.findAll(pageable);
 
-        assertThat(responses).extracting(UserResponse::email)
+        assertThat(responses.getContent()).extracting(UserResponse::email)
                 .containsExactly("john@coeur.app", "mary@coeur.app");
     }
 

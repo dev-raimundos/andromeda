@@ -12,6 +12,7 @@ services:
       retries: 3
 
   app:
+    profiles: ["prod"]
     build: .
     ports:
       - '${APP_PORT:-8080}:8080'

@@ -175,11 +175,11 @@ class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.email", is("crud@coeur.app")))
                 .andExpect(jsonPath("$.name", is("Crud User")));
 
-        // 4. Listar todos os usuários
+        // 4. Listar todos os usuários (paginado)
         mockMvc.perform(get("/api/users")
                         .header("Authorization", authHeader))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))));
+                .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(2))));
 
         // 5. Atualizar dados do usuário
         UpdateUserRequest updateRequest = new UpdateUserRequest("crud_updated@coeur.app", "Crud User Updated", "ROLE_ADMIN");

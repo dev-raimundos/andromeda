@@ -1,13 +1,16 @@
 package br.app.coeur.modules.authentication.service;
 
 import br.app.coeur.modules.authentication.domain.RefreshToken;
+import br.app.coeur.modules.authentication.exception.InvalidCredentialsException;
+import br.app.coeur.modules.authentication.exception.InvalidRefreshTokenException;
 import br.app.coeur.shared.exception.BusinessException;
-import br.app.coeur.shared.exception.ResourceNotFoundException;
 import br.app.coeur.modules.user.domain.User;
 import br.app.coeur.modules.authentication.dto.LoginRequest;
 import br.app.coeur.modules.authentication.dto.RefreshTokenRequest;
 import br.app.coeur.modules.authentication.dto.TokenResponse;
 import br.app.coeur.modules.authentication.repository.RefreshTokenRepository;
+import br.app.coeur.modules.user.exception.UserBlockedException;
+import br.app.coeur.modules.user.exception.UserNotFoundException;
 import br.app.coeur.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,11 +49,9 @@ public class AuthService {
     public TokenResponse refresh(RefreshTokenRequest request) {
         RefreshToken oldToken = refreshTokenRepository.findByToken(request.refreshToken())
                 .filter(token -> token.isValid(Instant.now()))
-                .orElseThrow(() -> new BusinessException("Refresh token inválido, revogado ou expirado."));
+                .orElseThrow(InvalidRefreshTokenException::new);
 
-        User user = userRepository.findById(oldToken.getUserId()).orElseThrow(
-                () -> new ResourceNotFoundException("Usuário não encontrado.")
-        );
+        User user = userRepository.findById(oldToken.getUserId()).orElseThrow(UserNotFoundException::new);
 
         oldToken.revoke();
 
@@ -64,7 +65,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> {
                     log.warn("[LOGIN] Falha no login: e-mail '{}' não está cadastrado no sistema", email);
-                    return new BusinessException("Credenciais inválidas.");
+                    return new InvalidCredentialsException();
                 });
 
         Instant now = Instant.now();
@@ -72,8 +73,7 @@ public class AuthService {
         if (user.isLocked(now)) {
             log.warn("[LOGIN] Falha no login: conta do usuário '{}' " +
                     "está bloqueada temporariamente até {}", email, user.getLockExpiredAt());
-            throw new BusinessException("Conta temporariamente bloqueada devido a múltiplas tentativas falhas. " +
-                    "Tente novamente mais tarde.");
+            throw new UserBlockedException();
         }
 
         if (passwordEncoder.matches(rawPassword, user.getPassword())) {
@@ -87,12 +87,12 @@ public class AuthService {
         if (user.isLocked(now)) {
             log.error("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. " +
                     "Limite de tentativas atingido! Conta BLOQUEADA temporariamente até {}", email, user.getLockExpiredAt());
-            throw new BusinessException("Conta bloqueada temporariamente devido a múltiplas tentativas falhas.");
+            throw new UserBlockedException();
         }
 
         log.warn("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. " +
                 "Tentativas falhas consecutivas: {}/{}", email, user.getFailedAttempts(), User.MAX_FAILED_ATTEMPTS);
-        throw new BusinessException("Credenciais inválidas.");
+        throw new InvalidCredentialsException();
     }
 
     private TokenResponse issueTokens(User user) {

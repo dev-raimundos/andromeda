@@ -1,5 +1,6 @@
-package br.app.coeur.core.config.filter;
+package br.app.coeur.core.filter;
 
+import br.app.coeur.core.exception.RateLimitExceededException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,6 +8,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RateLimitingFilter implements Filter {
@@ -36,10 +39,13 @@ public class RateLimitingFilter implements Filter {
             TokenBucket bucket = ipBuckets.computeIfAbsent(ip, k -> new TokenBucket(MAX_TOKENS, REFILL_PERIOD_SECONDS));
 
             if (!bucket.tryConsume()) {
+                RateLimitExceededException exception = new RateLimitExceededException(ip);
+                log.warn("[RATE_LIMIT] {}", exception.getMessage());
+
                 httpResponse.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 httpResponse.setContentType("application/json");
                 httpResponse.setCharacterEncoding("UTF-8");
-                httpResponse.getWriter().write("{\"error\": \"Excesso de requisições. Rate limit excedido. Tente novamente em instantes.\"}");
+                httpResponse.getWriter().write("{\"error\": \"%s\"}".formatted(exception.getMessage()));
                 return;
             }
         }

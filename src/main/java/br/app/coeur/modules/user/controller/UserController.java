@@ -9,12 +9,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Objects;
 
 @RestController
@@ -52,12 +54,12 @@ public class UserController {
     @GetMapping
     @Operation(
             summary = "Listar todos os usuários",
-            description = "Retorna uma lista com todos os usuários cadastrados. Requer autenticação JWT."
+            description = "Retorna uma página com os usuários cadastrados. Requer autenticação JWT."
     )
-    @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
+    @ApiResponse(responseCode = "200", description = "Página retornada com sucesso")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public List<UserResponse> listAll() {
-        return userService.findAll();
+    public Page<UserResponse> listAll(@PageableDefault(size = 20) Pageable pageable) {
+        return userService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
