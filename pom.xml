@@ -11,20 +11,28 @@
     <groupId>br.app.coeur</groupId>
     <artifactId>api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name/>
-    <description/>
-    <url/>
+    <name>Andromeda API</name>
+    <description>API backend da plataforma Coeur, com módulos de autenticação, usuários e compras.</description>
+    <url>https://github.com/dev-raimundos/andromeda</url>
     <licenses>
-        <license/>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <id>dev-raimundos</id>
+            <name>Raimundo</name>
+            <email>devraimundos@outlook.com</email>
+        </developer>
     </developers>
     <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
+        <connection>scm:git:https://github.com/dev-raimundos/andromeda.git</connection>
+        <developerConnection>scm:git:https://github.com/dev-raimundos/andromeda.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/dev-raimundos/andromeda</url>
     </scm>
     <properties>
         <java.version>21</java.version>
