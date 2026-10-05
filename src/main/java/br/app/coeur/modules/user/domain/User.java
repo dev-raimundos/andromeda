@@ -1,14 +1,8 @@
 package br.app.coeur.modules.user.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
+import br.app.coeur.shared.persistence.BaseEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -16,8 +10,7 @@ import java.time.Instant;
 @Getter
 @Entity
 @Table(name = "users")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseEntity<Long> {
 
     public static final String DEFAULT_ROLE = "ROLE_USER";
     public static final int MAX_FAILED_ATTEMPTS = 5;
@@ -45,6 +38,9 @@ public class User {
     @Column(name = "lock_expired_at")
     private Instant lockExpiredAt;
 
+    protected User() {
+    }
+
     private User(String email, String password, String name) {
         this.email = requireText(email, "E-mail é obrigatório.");
         this.password = requireText(password, "Senha é obrigatória.");
@@ -61,7 +57,9 @@ public class User {
     }
 
     public void registerFailedLogin(Instant now) {
+
         this.failedAttempts++;
+
         if (this.failedAttempts >= MAX_FAILED_ATTEMPTS) {
             this.lockExpiredAt = now.plus(LOCK_DURATION);
         }

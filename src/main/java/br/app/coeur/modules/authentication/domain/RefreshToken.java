@@ -1,5 +1,6 @@
 package br.app.coeur.modules.authentication.domain;
 
+import br.app.coeur.shared.persistence.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,6 +10,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -17,7 +19,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "refresh_tokens")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RefreshToken {
+public class RefreshToken extends BaseEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,8 +44,12 @@ public class RefreshToken {
         this.revoked = false;
     }
 
-    public static RefreshToken issue(String token, Long userId, Instant now, Duration validFor) {
-        return new RefreshToken(token, userId, now.plus(validFor));
+    public static RefreshToken issue(String token, Long userId, @NonNull Instant now, Duration validFor) {
+        return new RefreshToken(
+                token,
+                userId,
+                now.plus(validFor)
+        );
     }
 
     public boolean isExpired(Instant now) {

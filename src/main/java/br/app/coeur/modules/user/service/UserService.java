@@ -1,21 +1,21 @@
 package br.app.coeur.modules.user.service;
 
-import br.app.coeur.shared.exception.ConflictException;
-import br.app.coeur.shared.exception.ResourceNotFoundException;
 import br.app.coeur.modules.user.domain.User;
 import br.app.coeur.modules.user.dto.RegisterUserRequest;
 import br.app.coeur.modules.user.dto.UpdateUserRequest;
 import br.app.coeur.modules.user.dto.UserResponse;
+import br.app.coeur.modules.user.exception.EmailAlreadyInUseException;
+import br.app.coeur.modules.user.exception.UserNotFoundException;
 import br.app.coeur.modules.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor()
 public class UserService {
 
     private final UserRepository userRepository;
@@ -23,8 +23,9 @@ public class UserService {
 
     @Transactional
     public UserResponse register(RegisterUserRequest request) {
+
         if (userRepository.existsByEmail(request.email())) {
-            throw new ConflictException("E-mail já está em uso.");
+            throw new EmailAlreadyInUseException();
         }
 
         User user = User.register(
@@ -44,10 +45,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponse> findAll() {
-        return userRepository.findAll().stream()
-                .map(UserResponse::from)
-                .toList();
+    public Page<UserResponse> findAll(Pageable pageable) {
+        return userRepository.findAll(pageable).map(UserResponse::from);
     }
 
     @Transactional
@@ -56,7 +55,7 @@ public class UserService {
 
         if (!request.email().equals(user.getEmail())) {
             if (userRepository.existsByEmail(request.email())) {
-                throw new ConflictException("E-mail já está em uso.");
+                throw new EmailAlreadyInUseException();
             }
             user.changeEmail(request.email());
         }
@@ -75,8 +74,6 @@ public class UserService {
     }
 
     private User getUser(Long id) {
-        return userRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Usuário não encontrado.")
-        );
+        return userRepository.findById(id).orElseThrow(UserNotFoundException::new);
     }
 }
