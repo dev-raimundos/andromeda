@@ -1,0 +1,13 @@
+spring:
+  flyway:
+    enabled: false
+
+  jpa:
+    properties:
+      jakarta:
+        persistence:
+          schema-generation:
+            scripts:
+              action: create
+              create-target: target/schema-generated.sql
+              create-source: metadata
