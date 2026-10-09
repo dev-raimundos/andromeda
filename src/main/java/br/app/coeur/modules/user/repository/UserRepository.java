@@ -1,6 +1,6 @@
 package br.app.coeur.modules.user.repository;
 
-import br.app.coeur.modules.user.domain.User;
+import br.app.coeur.modules.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

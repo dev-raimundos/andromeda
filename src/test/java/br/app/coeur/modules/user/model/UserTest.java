@@ -1,4 +1,4 @@
-package br.app.coeur.modules.user.domain;
+package br.app.coeur.modules.user.model;
 
 import org.junit.jupiter.api.Test;
 

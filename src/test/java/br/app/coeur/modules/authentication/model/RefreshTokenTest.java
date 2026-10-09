@@ -1,4 +1,4 @@
-package br.app.coeur.modules.authentication.domain;
+package br.app.coeur.modules.authentication.model;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,6 @@
 package br.app.coeur.modules.user.service;
 
-import br.app.coeur.modules.user.domain.User;
+import br.app.coeur.modules.user.model.User;
 import br.app.coeur.modules.user.dto.RegisterUserRequest;
 import br.app.coeur.modules.user.dto.UpdateUserRequest;
 import br.app.coeur.modules.user.dto.UserResponse;

@@ -2,12 +2,12 @@ package br.app.coeur.modules.authentication.service;
 
 import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
-import br.app.coeur.modules.authentication.domain.RefreshToken;
+import br.app.coeur.modules.authentication.model.RefreshToken;
 import br.app.coeur.modules.authentication.dto.LoginRequest;
 import br.app.coeur.modules.authentication.dto.RefreshTokenRequest;
 import br.app.coeur.modules.authentication.dto.TokenResponse;
 import br.app.coeur.modules.authentication.repository.RefreshTokenRepository;
-import br.app.coeur.modules.user.domain.User;
+import br.app.coeur.modules.user.model.User;
 import br.app.coeur.modules.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

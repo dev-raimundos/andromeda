@@ -297,6 +297,6 @@ class AuthenticationIntegrationTest {
         // A 31ª requisição deve estourar o limite e retornar 429 Too Many Requests
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isTooManyRequests())
-                .andExpect(jsonPath("$.error", containsString("Rate limit excedido")));
+                .andExpect(jsonPath("$.error", containsString("Excesso de requisições")));
     }
 }
