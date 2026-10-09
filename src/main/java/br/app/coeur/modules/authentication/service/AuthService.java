@@ -1,10 +1,10 @@
 package br.app.coeur.modules.authentication.service;
 
-import br.app.coeur.modules.authentication.domain.RefreshToken;
+import br.app.coeur.modules.authentication.model.RefreshToken;
 import br.app.coeur.modules.authentication.exception.InvalidCredentialsException;
 import br.app.coeur.modules.authentication.exception.InvalidRefreshTokenException;
 import br.app.coeur.shared.exception.BusinessException;
-import br.app.coeur.modules.user.domain.User;
+import br.app.coeur.modules.user.model.User;
 import br.app.coeur.modules.authentication.dto.LoginRequest;
 import br.app.coeur.modules.authentication.dto.RefreshTokenRequest;
 import br.app.coeur.modules.authentication.dto.TokenResponse;

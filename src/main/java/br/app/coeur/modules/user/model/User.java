@@ -1,4 +1,4 @@
-package br.app.coeur.modules.user.domain;
+package br.app.coeur.modules.user.model;
 
 import br.app.coeur.shared.persistence.BaseEntity;
 import jakarta.persistence.*;

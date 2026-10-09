@@ -1,4 +1,4 @@
-package br.app.coeur.modules.authentication.domain;
+package br.app.coeur.modules.authentication.model;
 
 import br.app.coeur.shared.persistence.BaseEntity;
 import jakarta.persistence.Column;

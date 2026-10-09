@@ -1,6 +1,6 @@
 package br.app.coeur.modules.user.dto;
 
-import br.app.coeur.modules.user.domain.User;
+import br.app.coeur.modules.user.model.User;
 
 public record UserResponse(
         Long id,

@@ -2,7 +2,7 @@ package br.app.coeur.modules.user.service;
 
 import br.app.coeur.shared.exception.ConflictException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
-import br.app.coeur.modules.user.domain.User;
+import br.app.coeur.modules.user.model.User;
 import br.app.coeur.modules.user.dto.RegisterUserRequest;
 import br.app.coeur.modules.user.dto.UpdateUserRequest;
 import br.app.coeur.modules.user.dto.UserResponse;
