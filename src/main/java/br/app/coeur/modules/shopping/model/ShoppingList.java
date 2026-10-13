@@ -21,7 +21,6 @@ import java.util.Optional;
 @Getter
 @Entity
 @Table(name = "shopping_lists")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShoppingList extends BaseEntity<Long> {
 
     @Id
@@ -36,6 +35,9 @@ public class ShoppingList extends BaseEntity<Long> {
 
     @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<ItemList> items = new ArrayList<>();
+
+    protected ShoppingList() {
+    }
 
     private ShoppingList(String name, Long userId) {
         this.name = requireText(name, "Nome é obrigatório.");

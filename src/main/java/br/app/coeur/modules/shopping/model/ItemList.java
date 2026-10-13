@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @Table(name = "shopping_list_items")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ItemList extends BaseEntity<Long> {
 
     @Id
@@ -36,6 +35,9 @@ public class ItemList extends BaseEntity<Long> {
 
     @Column(nullable = false)
     private boolean purchased;
+
+    protected ItemList() {
+    }
 
     private ItemList(ShoppingList shoppingList, Item item, int quantity) {
         this.shoppingList = shoppingList;
