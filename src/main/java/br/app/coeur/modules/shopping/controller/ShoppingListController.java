@@ -19,7 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
+import static br.app.coeur.shared.util.JwtUtils.userId;
 
 @RestController
 @RequestMapping("/api/shopping-lists")
@@ -141,9 +141,5 @@ public class ShoppingListController {
                                            @PathVariable Long id,
                                            @PathVariable Long itemId) {
         return shoppingListService.removeItem(userId(jwt), id, itemId);
-    }
-
-    private Long userId(Jwt jwt) {
-        return Long.valueOf(Objects.requireNonNull(jwt.getSubject()));
     }
 }
