@@ -6,7 +6,7 @@ API backend da plataforma Coeur, construída em Spring Boot 4 / Java 21, com mó
 
 - **Java 21** (virtual threads habilitadas)
 - **Spring Boot 4.1.1** — Web MVC, Data JPA, Security, OAuth2 Resource Server
-- **PostgreSQL** (via Supabase) + **Flyway** para migrações
+- **PostgreSQL 18** (container local ou servidor on-premise) + **Flyway** para migrações
 - **Redis** — cache / rate limiting
 - **springdoc-openapi** — documentação Swagger
 - **Lombok**
@@ -76,21 +76,21 @@ Copie `.env.example` para `.env` e preencha as variáveis:
 SPRING_PROFILES_ACTIVE=dev
 APP_PORT=8080
 REDIS_PORT=6379
-COMPOSE_PROFILES=
+POSTGRES_PORT=5432
+COMPOSE_PROFILES=local-db
 
-DATABASE_URL=jdbc:postgresql://db.<project-ref>.supabase.co:5432/postgres?sslmode=require
-DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=secret
+POSTGRES_DB=mydatabase
+POSTGRES_USER=myuser
+POSTGRES_PASSWORD=secret
+
+DATABASE_URL=jdbc:postgresql://<host>:5432/<database>
+DATABASE_USERNAME=<usuario>
+DATABASE_PASSWORD=<senha>
 
 FLYWAY_ENABLED=true
 
 REDIS_HOST=localhost
 REDIS_PASSWORD=
-
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
-SUPABASE_SECRET_KEY=sb_secret_xxx
-SUPABASE_JWKS_URL=https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
 ```
 
 O `application.yaml` carrega o `.env` da raiz automaticamente (`spring.config.import: optional:file:.env`) quando a aplicação roda pela IDE/Maven. Variáveis de ambiente reais (ex.: definidas pelo Docker Compose) têm precedência sobre o `.env`.
@@ -99,22 +99,36 @@ O `application.yaml` carrega o `.env` da raiz automaticamente (`spring.config.im
 
 ### Localmente (IDE/Maven)
 
-Pré-requisitos: Java 21, um Postgres acessível (ex.: Supabase) e, opcionalmente, um Redis local.
+Pré-requisitos: Java 21, Docker e, para o banco, uma das opções abaixo.
 
 ```bash
 # com o .env preenchido na raiz
 ./mvnw spring-boot:run
 ```
 
-A aplicação sobe em `http://localhost:8080` com o perfil `dev` por padrão.
+A aplicação sobe em `http://localhost:8080` com o perfil `dev` por padrão. O `spring-boot-docker-compose` sobe o `compose.yaml` automaticamente ao iniciar a app.
+
+#### Banco de dados: container local ou on-premise
+
+Quem decide é a variável `COMPOSE_PROFILES` no `.env`:
+
+| `COMPOSE_PROFILES` | Banco usado |
+|---|---|
+| `local-db` | PostgreSQL 18 em container, com volume `postgres_data`. A app se conecta a ele sozinha e as migrations do Flyway rodam nele. `DATABASE_URL/USERNAME/PASSWORD` são ignoradas. |
+| *(vazio)* | O banco definido em `DATABASE_URL` (ex.: Postgres on-premise). |
+
+Os dados do Postgres local persistem entre reinícios. Para zerar o banco: `docker compose down -v`. Se a porta 5432 já estiver em uso, mude `POSTGRES_PORT`.
 
 ### Via Docker Compose
 
-O `compose.yaml` sempre sobe o Redis. O serviço `app` (build + run do próprio container) só é ativado com o profile `prod`:
+O `compose.yaml` sempre sobe o Redis. O Postgres local só sobe com o profile `local-db`, e o serviço `app` (build + run do próprio container) só com o profile `prod`:
 
 ```bash
 # apenas Redis (app roda localmente pela IDE/Maven)
 docker compose up -d
+
+# Redis + Postgres local
+COMPOSE_PROFILES=local-db docker compose up -d
 
 # Redis + aplicação containerizada
 COMPOSE_PROFILES=prod docker compose up -d --build
