@@ -64,7 +64,8 @@ public class ItemController {
     @ApiResponse(responseCode = "200", description = "Item atualizado com sucesso")
     @ApiResponse(responseCode = "400", description = "Payload inválido")
     @ApiResponse(responseCode = "404", description = "Item não encontrado")
-    public ItemResponse update(@PathVariable Long id, @Valid @RequestBody UpdateItemRequest request) {
+    public ItemResponse update(@PathVariable Long id,
+                               @Valid @RequestBody UpdateItemRequest request) {
         return itemService.update(id, request);
     }
 

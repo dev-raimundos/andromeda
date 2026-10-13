@@ -38,7 +38,8 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "201", description = "Lista criada com sucesso")
     @ApiResponse(responseCode = "400", description = "Payload inválido")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public ShoppingListResponse create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateShoppingListRequest request) {
+    public ShoppingListResponse create(@AuthenticationPrincipal Jwt jwt,
+                                       @Valid @RequestBody CreateShoppingListRequest request) {
         return shoppingListService.create(userId(jwt), request);
     }
 
@@ -49,7 +50,8 @@ public class ShoppingListController {
     )
     @ApiResponse(responseCode = "200", description = "Página retornada com sucesso")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public Page<ShoppingListResponse> listAll(@AuthenticationPrincipal Jwt jwt, @PageableDefault(size = 20) Pageable pageable) {
+    public Page<ShoppingListResponse> listAll(@AuthenticationPrincipal Jwt jwt,
+                                              @PageableDefault(size = 20) Pageable pageable) {
         return shoppingListService.findAll(userId(jwt), pageable);
     }
 
@@ -61,7 +63,8 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "200", description = "Lista encontrada com sucesso")
     @ApiResponse(responseCode = "404", description = "Lista não encontrada")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public ShoppingListResponse getById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+    public ShoppingListResponse getById(@AuthenticationPrincipal Jwt jwt,
+                                        @PathVariable Long id) {
         return shoppingListService.findById(userId(jwt), id);
     }
 
@@ -74,7 +77,9 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "400", description = "Payload inválido")
     @ApiResponse(responseCode = "404", description = "Lista não encontrada")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public ShoppingListResponse rename(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id, @Valid @RequestBody UpdateShoppingListRequest request) {
+    public ShoppingListResponse rename(@AuthenticationPrincipal Jwt jwt,
+                                       @PathVariable Long id,
+                                       @Valid @RequestBody UpdateShoppingListRequest request) {
         return shoppingListService.rename(userId(jwt), id, request);
     }
 
@@ -87,7 +92,8 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "204", description = "Lista deletada com sucesso")
     @ApiResponse(responseCode = "404", description = "Lista não encontrada")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+    public void delete(@AuthenticationPrincipal Jwt jwt,
+                       @PathVariable Long id) {
         shoppingListService.delete(userId(jwt), id);
     }
 
@@ -101,7 +107,9 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "400", description = "Payload inválido")
     @ApiResponse(responseCode = "404", description = "Lista ou item não encontrado")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public ShoppingListResponse addItem(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id, @Valid @RequestBody AddItemToShoppingListRequest request) {
+    public ShoppingListResponse addItem(@AuthenticationPrincipal Jwt jwt,
+                                        @PathVariable Long id,
+                                        @Valid @RequestBody AddItemToShoppingListRequest request) {
         return shoppingListService.addItem(userId(jwt), id, request);
     }
 
@@ -114,7 +122,10 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "400", description = "Payload inválido")
     @ApiResponse(responseCode = "404", description = "Lista não encontrada ou item não faz parte da lista")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public ShoppingListResponse changeItemQuantity(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id, @PathVariable Long itemId, @Valid @RequestBody UpdateItemQuantityRequest request) {
+    public ShoppingListResponse changeItemQuantity(@AuthenticationPrincipal Jwt jwt,
+                                                   @PathVariable Long id,
+                                                   @PathVariable Long itemId,
+                                                   @Valid @RequestBody UpdateItemQuantityRequest request) {
         return shoppingListService.changeItemQuantity(userId(jwt), id, itemId, request);
     }
 
@@ -126,7 +137,9 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "200", description = "Item removido com sucesso")
     @ApiResponse(responseCode = "404", description = "Lista não encontrada ou item não faz parte da lista")
     @ApiResponse(responseCode = "401", description = "Não autorizado")
-    public ShoppingListResponse removeItem(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id, @PathVariable Long itemId) {
+    public ShoppingListResponse removeItem(@AuthenticationPrincipal Jwt jwt,
+                                           @PathVariable Long id,
+                                           @PathVariable Long itemId) {
         return shoppingListService.removeItem(userId(jwt), id, itemId);
     }
 
