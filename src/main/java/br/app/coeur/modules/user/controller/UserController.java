@@ -4,6 +4,7 @@ import br.app.coeur.modules.user.dto.RegisterUserRequest;
 import br.app.coeur.modules.user.dto.UpdateUserRequest;
 import br.app.coeur.modules.user.dto.UserResponse;
 import br.app.coeur.modules.user.service.UserService;
+import br.app.coeur.shared.security.CurrentUserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,11 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/users")
@@ -46,9 +43,8 @@ public class UserController {
     )
     @ApiResponse(responseCode = "200", description = "Dados obtidos com sucesso")
     @ApiResponse(responseCode = "401", description = "Não autorizado / Token JWT ausente ou inválido")
-    public UserResponse me(@AuthenticationPrincipal Jwt jwt) {
-        Long id = Long.valueOf(Objects.requireNonNull(jwt.getSubject()));
-        return userService.findById(id);
+    public UserResponse me(@CurrentUserId Long userId) {
+        return userService.findById(userId);
     }
 
     @GetMapping
