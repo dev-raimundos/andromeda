@@ -7,14 +7,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "items")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Item extends BaseEntity<Long> {
 
     @Id
@@ -34,6 +31,9 @@ public class Item extends BaseEntity<Long> {
 
     @Column(nullable = false)
     private String brand;
+
+    protected Item() {
+    }
 
     private Item(String name, String description, Double price, String url, String brand) {
         this.name = requireText(name, "Nome é obrigatório.");
