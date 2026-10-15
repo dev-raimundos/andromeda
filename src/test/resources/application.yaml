@@ -9,3 +9,6 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+
+  cache:
+    type: none
