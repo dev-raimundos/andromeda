@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class JwtUtils {
     private JwtUtils() {
-        /* Essa classe utilitária não deve ser instânciada. */
+        /* This utility class must not be instantiated. */
     }
 
     public static Long userId(Jwt jwt) {

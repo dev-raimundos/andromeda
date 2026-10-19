@@ -34,6 +34,6 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
             return userId(jwt);
         }
 
-        throw new AuthenticationCredentialsNotFoundException("Nenhum usuário autenticado na requisição.");
+        throw new AuthenticationCredentialsNotFoundException("No authenticated user in the request.");
     }
 }
