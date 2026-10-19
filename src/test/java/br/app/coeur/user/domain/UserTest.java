@@ -1,4 +1,4 @@
-package br.app.coeur.modules.user.model;
+package br.app.coeur.user.domain;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,11 +32,11 @@ class UserTest {
     @Test
     void registerShouldRejectBlankFields() {
         assertThatThrownBy(() -> User.register(" ", "encoded", "John"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("E-mail é obrigatório.");
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Email is required.");
         assertThatThrownBy(() -> User.register("john@coeur.app", null, "John"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("Senha é obrigatória.");
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Password is required.");
         assertThatThrownBy(() -> User.register("john@coeur.app", "encoded", ""))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("Nome é obrigatório.");
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Name is required.");
     }
 
     @Test

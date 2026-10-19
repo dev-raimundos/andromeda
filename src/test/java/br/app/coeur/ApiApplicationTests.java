@@ -1,4 +1,4 @@
-package br.app.coeur.api;
+package br.app.coeur;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

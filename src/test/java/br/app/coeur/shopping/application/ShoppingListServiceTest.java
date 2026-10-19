@@ -1,15 +1,15 @@
-package br.app.coeur.modules.shopping.service;
+package br.app.coeur.shopping.application;
 
-import br.app.coeur.modules.shopping.dto.AddItemToShoppingListRequest;
-import br.app.coeur.modules.shopping.dto.CreateShoppingListRequest;
-import br.app.coeur.modules.shopping.dto.ShoppingListResponse;
-import br.app.coeur.modules.shopping.dto.UpdateItemQuantityRequest;
-import br.app.coeur.modules.shopping.dto.UpdateShoppingListRequest;
-import br.app.coeur.modules.shopping.model.Item;
-import br.app.coeur.modules.shopping.model.ShoppingList;
-import br.app.coeur.modules.shopping.repository.ItemRepository;
-import br.app.coeur.modules.shopping.repository.ShoppingListRepository;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
+import br.app.coeur.shopping.application.dto.request.AddItemToShoppingListRequest;
+import br.app.coeur.shopping.application.dto.request.CreateShoppingListRequest;
+import br.app.coeur.shopping.application.dto.request.UpdateItemQuantityRequest;
+import br.app.coeur.shopping.application.dto.request.UpdateShoppingListRequest;
+import br.app.coeur.shopping.application.dto.response.ShoppingListResponse;
+import br.app.coeur.shopping.domain.Item;
+import br.app.coeur.shopping.domain.ItemRepository;
+import br.app.coeur.shopping.domain.ShoppingList;
+import br.app.coeur.shopping.domain.ShoppingListRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,13 +42,13 @@ class ShoppingListServiceTest {
     private ShoppingListService shoppingListService;
 
     private ShoppingList existingShoppingList() {
-        ShoppingList shoppingList = ShoppingList.create("Mercado", 1L);
+        ShoppingList shoppingList = ShoppingList.create("Groceries", 1L);
         ReflectionTestUtils.setField(shoppingList, "id", 10L);
         return shoppingList;
     }
 
     private Item existingItem() {
-        Item item = Item.create("Arroz", "Arroz branco tipo 1", 20.0, null, "Tio João");
+        Item item = Item.create("Rice", "White rice, type 1", 20.0, null, "Ben's");
         ReflectionTestUtils.setField(item, "id", 100L);
         return item;
     }
@@ -57,9 +57,9 @@ class ShoppingListServiceTest {
     void createShouldPersistShoppingListForUser() {
         when(shoppingListRepository.save(any(ShoppingList.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ShoppingListResponse response = shoppingListService.create(1L, new CreateShoppingListRequest("Mercado"));
+        ShoppingListResponse response = shoppingListService.create(1L, new CreateShoppingListRequest("Groceries"));
 
-        assertThat(response.name()).isEqualTo("Mercado");
+        assertThat(response.name()).isEqualTo("Groceries");
         assertThat(response.userId()).isEqualTo(1L);
         assertThat(response.items()).isEmpty();
     }
@@ -71,7 +71,7 @@ class ShoppingListServiceTest {
         ShoppingListResponse response = shoppingListService.findById(1L, 10L);
 
         assertThat(response.id()).isEqualTo(10L);
-        assertThat(response.name()).isEqualTo("Mercado");
+        assertThat(response.name()).isEqualTo("Groceries");
     }
 
     @Test
@@ -80,7 +80,7 @@ class ShoppingListServiceTest {
 
         assertThatThrownBy(() -> shoppingListService.findById(1L, 10L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Lista de compras não encontrada.");
+                .hasMessage("Shopping list not found.");
     }
 
     @Test
@@ -90,16 +90,16 @@ class ShoppingListServiceTest {
 
         Page<ShoppingListResponse> responses = shoppingListService.findAll(1L, pageable);
 
-        assertThat(responses.getContent()).extracting(ShoppingListResponse::name).containsExactly("Mercado");
+        assertThat(responses.getContent()).extracting(ShoppingListResponse::name).containsExactly("Groceries");
     }
 
     @Test
     void renameShouldUpdateShoppingListName() {
         when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(existingShoppingList()));
 
-        ShoppingListResponse response = shoppingListService.rename(1L, 10L, new UpdateShoppingListRequest("Feira"));
+        ShoppingListResponse response = shoppingListService.rename(1L, 10L, new UpdateShoppingListRequest("Market"));
 
-        assertThat(response.name()).isEqualTo("Feira");
+        assertThat(response.name()).isEqualTo("Market");
     }
 
     @Test
@@ -131,7 +131,7 @@ class ShoppingListServiceTest {
 
         assertThatThrownBy(() -> shoppingListService.addItem(1L, 10L, new AddItemToShoppingListRequest(100L, 2)))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Item não encontrado.");
+                .hasMessage("Item not found.");
     }
 
     @Test

@@ -1,4 +1,4 @@
-package br.app.coeur.modules.user.dto;
+package br.app.coeur.user.application.dto.request;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -49,23 +49,23 @@ class UserRequestValidationTest {
     @Test
     void registerRequestShouldRejectMissingFields() {
         assertThat(violations(new RegisterUserRequest(null, null, null)))
-                .containsEntry("email", "E-mail é obrigatório.")
-                .containsEntry("password", "Senha é obrigatória.")
-                .containsEntry("name", "Nome é obrigatório.");
+                .containsEntry("email", "Email is required.")
+                .containsEntry("password", "Password is required.")
+                .containsEntry("name", "Name is required.");
     }
 
     @Test
     void registerRequestShouldRejectBlankPassword() {
         assertThat(violations(new RegisterUserRequest("john@coeur.app", " ", "John")))
                 .containsOnlyKeys("password")
-                .containsEntry("password", "Senha é obrigatória.");
+                .containsEntry("password", "Password is required.");
     }
 
     @Test
     void registerRequestShouldRejectInvalidEmail() {
         assertThat(violations(new RegisterUserRequest("not-an-email", "secret", "John")))
                 .containsOnlyKeys("email")
-                .containsEntry("email", "E-mail inválido.");
+                .containsEntry("email", "Invalid email.");
     }
 
     @Test
@@ -86,9 +86,9 @@ class UserRequestValidationTest {
     @Test
     void updateRequestShouldRejectMissingFields() {
         assertThat(violations(new UpdateUserRequest(null, null, null)))
-                .containsEntry("email", "E-mail é obrigatório.")
-                .containsEntry("name", "Nome é obrigatório.")
-                .containsEntry("roles", "Perfis são obrigatórios.");
+                .containsEntry("email", "Email is required.")
+                .containsEntry("name", "Name is required.")
+                .containsEntry("roles", "Roles are required.");
     }
 
     @Test
@@ -101,6 +101,6 @@ class UserRequestValidationTest {
     void updateRequestShouldRejectInvalidEmail() {
         assertThat(violations(new UpdateUserRequest("not-an-email", "John", "ROLE_USER")))
                 .containsOnlyKeys("email")
-                .containsEntry("email", "E-mail inválido.");
+                .containsEntry("email", "Invalid email.");
     }
 }

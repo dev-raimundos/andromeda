@@ -1,12 +1,12 @@
-package br.app.coeur.modules.user.service;
+package br.app.coeur.user.application;
 
 import br.app.coeur.shared.exception.ConflictException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
-import br.app.coeur.modules.user.model.User;
-import br.app.coeur.modules.user.dto.RegisterUserRequest;
-import br.app.coeur.modules.user.dto.UpdateUserRequest;
-import br.app.coeur.modules.user.dto.UserResponse;
-import br.app.coeur.modules.user.repository.UserRepository;
+import br.app.coeur.user.application.dto.request.RegisterUserRequest;
+import br.app.coeur.user.application.dto.request.UpdateUserRequest;
+import br.app.coeur.user.application.dto.response.UserResponse;
+import br.app.coeur.user.domain.User;
+import br.app.coeur.user.domain.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -69,7 +69,7 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.register(new RegisterUserRequest("john@coeur.app", "secret", "John")))
                 .isInstanceOf(ConflictException.class)
-                .hasMessage("E-mail já está em uso.");
+                .hasMessage("Email is already in use.");
 
         verify(userRepository, never()).save(any());
     }
@@ -90,7 +90,7 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.findById(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Usuário não encontrado.");
+                .hasMessage("User not found.");
     }
 
     @Test
@@ -137,7 +137,7 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.update(1L, new UpdateUserRequest("taken@coeur.app", "John", User.DEFAULT_ROLE)))
                 .isInstanceOf(ConflictException.class)
-                .hasMessage("E-mail já está em uso.");
+                .hasMessage("Email is already in use.");
 
         assertThat(user.getEmail()).isEqualTo("john@coeur.app");
     }
@@ -148,7 +148,7 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.update(99L, new UpdateUserRequest("a@b.c", "John", User.DEFAULT_ROLE)))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Usuário não encontrado.");
+                .hasMessage("User not found.");
     }
 
     @Test
@@ -167,7 +167,7 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.delete(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Usuário não encontrado.");
+                .hasMessage("User not found.");
 
         verify(userRepository, never()).delete(any());
     }

@@ -1,11 +1,11 @@
-package br.app.coeur.modules.shopping.service;
+package br.app.coeur.shopping.application;
 
-import br.app.coeur.modules.shopping.dto.CreateItemRequest;
-import br.app.coeur.modules.shopping.dto.ItemResponse;
-import br.app.coeur.modules.shopping.dto.UpdateItemRequest;
-import br.app.coeur.modules.shopping.model.Item;
-import br.app.coeur.modules.shopping.repository.ItemRepository;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
+import br.app.coeur.shopping.application.dto.request.CreateItemRequest;
+import br.app.coeur.shopping.application.dto.request.UpdateItemRequest;
+import br.app.coeur.shopping.application.dto.response.ItemResponse;
+import br.app.coeur.shopping.domain.Item;
+import br.app.coeur.shopping.domain.ItemRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,7 +38,7 @@ class ItemServiceTest {
     private ItemService itemService;
 
     private Item existingItem() {
-        Item item = Item.create("Arroz", "Arroz branco tipo 1", 20.0, null, "Tio João");
+        Item item = Item.create("Rice", "White rice, type 1", 20.0, null, "Ben's");
         ReflectionTestUtils.setField(item, "id", 1L);
         return item;
     }
@@ -48,14 +48,14 @@ class ItemServiceTest {
         when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ItemResponse response = itemService.create(
-                new CreateItemRequest("Arroz", "Arroz branco tipo 1", 20.0, "https://store.com/arroz", "Tio João")
+                new CreateItemRequest("Rice", "White rice, type 1", 20.0, "https://store.com/rice", "Ben's")
         );
 
         ArgumentCaptor<Item> captor = ArgumentCaptor.forClass(Item.class);
         verify(itemRepository).save(captor.capture());
-        assertThat(captor.getValue().getName()).isEqualTo("Arroz");
-        assertThat(response.name()).isEqualTo("Arroz");
-        assertThat(response.brand()).isEqualTo("Tio João");
+        assertThat(captor.getValue().getName()).isEqualTo("Rice");
+        assertThat(response.name()).isEqualTo("Rice");
+        assertThat(response.brand()).isEqualTo("Ben's");
     }
 
     @Test
@@ -65,7 +65,7 @@ class ItemServiceTest {
         ItemResponse response = itemService.findById(1L);
 
         assertThat(response.id()).isEqualTo(1L);
-        assertThat(response.name()).isEqualTo("Arroz");
+        assertThat(response.name()).isEqualTo("Rice");
     }
 
     @Test
@@ -74,7 +74,7 @@ class ItemServiceTest {
 
         assertThatThrownBy(() -> itemService.findById(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Item não encontrado.");
+                .hasMessage("Item not found.");
     }
 
     @Test
@@ -84,7 +84,7 @@ class ItemServiceTest {
 
         Page<ItemResponse> responses = itemService.findAll(pageable);
 
-        assertThat(responses.getContent()).extracting(ItemResponse::name).containsExactly("Arroz");
+        assertThat(responses.getContent()).extracting(ItemResponse::name).containsExactly("Rice");
     }
 
     @Test
@@ -93,13 +93,13 @@ class ItemServiceTest {
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
 
         ItemResponse response = itemService.update(
-                1L, new UpdateItemRequest("Feijão", "Feijão carioca", 15.0, "https://store.com/feijao", "Camil")
+                1L, new UpdateItemRequest("Beans", "Carioca beans", 15.0, "https://store.com/beans", "Acme")
         );
 
-        assertThat(response.name()).isEqualTo("Feijão");
-        assertThat(response.description()).isEqualTo("Feijão carioca");
+        assertThat(response.name()).isEqualTo("Beans");
+        assertThat(response.description()).isEqualTo("Carioca beans");
         assertThat(response.price()).isEqualTo(15.0);
-        assertThat(response.brand()).isEqualTo("Camil");
+        assertThat(response.brand()).isEqualTo("Acme");
     }
 
     @Test
@@ -108,7 +108,7 @@ class ItemServiceTest {
 
         assertThatThrownBy(() -> itemService.update(99L, new UpdateItemRequest("a", "b", 1.0, null, "c")))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Item não encontrado.");
+                .hasMessage("Item not found.");
     }
 
     @Test
@@ -127,7 +127,7 @@ class ItemServiceTest {
 
         assertThatThrownBy(() -> itemService.delete(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Item não encontrado.");
+                .hasMessage("Item not found.");
 
         verify(itemRepository, never()).delete(any());
     }

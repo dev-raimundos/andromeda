@@ -1,4 +1,4 @@
-package br.app.coeur.modules.authentication.dto;
+package br.app.coeur.identity.application.dto.request;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -49,15 +49,15 @@ class AuthRequestValidationTest {
     @Test
     void loginRequestShouldRejectMissingFields() {
         assertThat(violations(new LoginRequest(null, null)))
-                .containsEntry("email", "E-mail é obrigatório.")
-                .containsEntry("password", "Senha é obrigatória.");
+                .containsEntry("email", "Email is required.")
+                .containsEntry("password", "Password is required.");
     }
 
     @Test
     void loginRequestShouldRejectInvalidEmail() {
         assertThat(violations(new LoginRequest("not-an-email", "secret")))
                 .containsOnlyKeys("email")
-                .containsEntry("email", "E-mail inválido.");
+                .containsEntry("email", "Invalid email.");
     }
 
     // ---------- RefreshTokenRequest ----------
@@ -70,6 +70,6 @@ class AuthRequestValidationTest {
     @Test
     void refreshTokenRequestShouldRejectBlankToken() {
         assertThat(violations(new RefreshTokenRequest(" ")))
-                .containsEntry("refreshToken", "Refresh token é obrigatório.");
+                .containsEntry("refreshToken", "Refresh token is required.");
     }
 }

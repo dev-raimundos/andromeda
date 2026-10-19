@@ -1,6 +1,6 @@
-package br.app.coeur.modules.authentication.service;
+package br.app.coeur.identity.application;
 
-import br.app.coeur.modules.user.model.User;
+import br.app.coeur.user.domain.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

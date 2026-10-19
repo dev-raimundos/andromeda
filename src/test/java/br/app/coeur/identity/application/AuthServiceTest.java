@@ -1,14 +1,14 @@
-package br.app.coeur.modules.authentication.service;
+package br.app.coeur.identity.application;
 
+import br.app.coeur.identity.application.dto.request.LoginRequest;
+import br.app.coeur.identity.application.dto.request.RefreshTokenRequest;
+import br.app.coeur.identity.application.dto.response.TokenResponse;
+import br.app.coeur.identity.domain.RefreshToken;
+import br.app.coeur.identity.domain.RefreshTokenRepository;
 import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
-import br.app.coeur.modules.authentication.model.RefreshToken;
-import br.app.coeur.modules.authentication.dto.LoginRequest;
-import br.app.coeur.modules.authentication.dto.RefreshTokenRequest;
-import br.app.coeur.modules.authentication.dto.TokenResponse;
-import br.app.coeur.modules.authentication.repository.RefreshTokenRepository;
-import br.app.coeur.modules.user.model.User;
-import br.app.coeur.modules.user.repository.UserRepository;
+import br.app.coeur.user.domain.User;
+import br.app.coeur.user.domain.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,7 +104,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("ghost@coeur.app", "secret")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("Credenciais inválidas.");
+                .hasMessage("Invalid credentials.");
 
         verify(refreshTokenRepository, never()).save(any());
     }
@@ -116,7 +116,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("john@coeur.app", "wrong")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("Credenciais inválidas.");
+                .hasMessage("Invalid credentials.");
 
         assertThat(user.getFailedAttempts()).isEqualTo(1);
         verify(refreshTokenRepository, never()).save(any());
@@ -132,7 +132,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("john@coeur.app", "wrong")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("bloqueada");
+                .hasMessageContaining("locked");
 
         assertThat(user.isLocked(Instant.now())).isTrue();
     }
@@ -145,7 +145,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("john@coeur.app", "secret")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("bloqueada");
+                .hasMessageContaining("locked");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(refreshTokenRepository, never()).save(any());
@@ -179,7 +179,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("unknown")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("Refresh token inválido, revogado ou expirado.");
+                .hasMessage("Refresh token is invalid, revoked, or expired.");
     }
 
     @Test
@@ -190,7 +190,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("revoked-token")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("Refresh token inválido, revogado ou expirado.");
+                .hasMessage("Refresh token is invalid, revoked, or expired.");
 
         verify(refreshTokenRepository, never()).save(any());
     }
@@ -202,7 +202,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("expired-token")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("Refresh token inválido, revogado ou expirado.");
+                .hasMessage("Refresh token is invalid, revoked, or expired.");
 
         verify(refreshTokenRepository, never()).save(any());
     }
@@ -215,7 +215,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("orphan-token")))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Usuário não encontrado.");
+                .hasMessage("User not found.");
 
         assertThat(token.isRevoked()).isFalse();
     }

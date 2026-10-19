@@ -1,6 +1,6 @@
-package br.app.coeur.modules.shopping.model;
+package br.app.coeur.shopping.domain;
 
-import br.app.coeur.modules.shopping.exception.ItemNotInShoppingListException;
+import br.app.coeur.shopping.domain.exception.ItemNotInShoppingListException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,18 +9,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ShoppingListTest {
 
     private ShoppingList newShoppingList() {
-        return ShoppingList.create("Mercado", 1L);
+        return ShoppingList.create("Groceries", 1L);
     }
 
     private Item newItem() {
-        return Item.create("Arroz", "Arroz branco tipo 1", 20.0, null, "Tio João");
+        return Item.create("Rice", "White rice, type 1", 20.0, null, "Ben's");
     }
 
     @Test
     void createShouldSetNameAndUserIdWithNoItems() {
         ShoppingList shoppingList = newShoppingList();
 
-        assertThat(shoppingList.getName()).isEqualTo("Mercado");
+        assertThat(shoppingList.getName()).isEqualTo("Groceries");
         assertThat(shoppingList.getUserId()).isEqualTo(1L);
         assertThat(shoppingList.getItems()).isEmpty();
     }
@@ -28,21 +28,21 @@ class ShoppingListTest {
     @Test
     void createShouldRejectBlankNameOrNullUserId() {
         assertThatThrownBy(() -> ShoppingList.create(" ", 1L))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("Nome é obrigatório.");
-        assertThatThrownBy(() -> ShoppingList.create("Mercado", null))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("Usuário é obrigatório.");
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Name is required.");
+        assertThatThrownBy(() -> ShoppingList.create("Groceries", null))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("User is required.");
     }
 
     @Test
     void renameShouldUpdateNameAndRejectBlankValue() {
         ShoppingList shoppingList = newShoppingList();
 
-        shoppingList.rename("Feira");
-        assertThat(shoppingList.getName()).isEqualTo("Feira");
+        shoppingList.rename("Market");
+        assertThat(shoppingList.getName()).isEqualTo("Market");
 
         assertThatThrownBy(() -> shoppingList.rename(""))
-                .isInstanceOf(IllegalArgumentException.class).hasMessage("Nome é obrigatório.");
-        assertThat(shoppingList.getName()).isEqualTo("Feira");
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Name is required.");
+        assertThat(shoppingList.getName()).isEqualTo("Market");
     }
 
     @Test
@@ -50,11 +50,11 @@ class ShoppingListTest {
         ShoppingList shoppingList = newShoppingList();
         Item item = newItem();
 
-        ItemList itemList = shoppingList.addItem(item, 2);
+        ShoppingListItem shoppingListItem = shoppingList.addItem(item, 2);
 
-        assertThat(shoppingList.getItems()).containsExactly(itemList);
-        assertThat(itemList.getItem()).isEqualTo(item);
-        assertThat(itemList.getQuantity()).isEqualTo(2);
+        assertThat(shoppingList.getItems()).containsExactly(shoppingListItem);
+        assertThat(shoppingListItem.getItem()).isEqualTo(item);
+        assertThat(shoppingListItem.getQuantity()).isEqualTo(2);
     }
 
     @Test
@@ -63,10 +63,10 @@ class ShoppingListTest {
         Item item = newItem();
 
         shoppingList.addItem(item, 2);
-        ItemList itemList = shoppingList.addItem(item, 3);
+        ShoppingListItem shoppingListItem = shoppingList.addItem(item, 3);
 
         assertThat(shoppingList.getItems()).hasSize(1);
-        assertThat(itemList.getQuantity()).isEqualTo(5);
+        assertThat(shoppingListItem.getQuantity()).isEqualTo(5);
     }
 
     @Test
@@ -86,7 +86,7 @@ class ShoppingListTest {
 
         assertThatThrownBy(() -> shoppingList.removeItem(newItem()))
                 .isInstanceOf(ItemNotInShoppingListException.class)
-                .hasMessage("Item não encontrado na lista de compras.");
+                .hasMessage("Item not found in the shopping list.");
     }
 
     @Test
@@ -106,6 +106,6 @@ class ShoppingListTest {
 
         assertThatThrownBy(() -> shoppingList.changeItemQuantity(newItem(), 5))
                 .isInstanceOf(ItemNotInShoppingListException.class)
-                .hasMessage("Item não encontrado na lista de compras.");
+                .hasMessage("Item not found in the shopping list.");
     }
 }
