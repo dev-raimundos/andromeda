@@ -1,4 +1,4 @@
-package br.app.coeur.modules.authentication.config;
+package br.app.coeur.identity.infrastructure.config;
 
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;

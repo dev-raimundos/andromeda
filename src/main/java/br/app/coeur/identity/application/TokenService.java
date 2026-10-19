@@ -1,6 +1,6 @@
-package br.app.coeur.modules.authentication.service;
+package br.app.coeur.identity.application;
 
-import br.app.coeur.modules.user.model.User;
+import br.app.coeur.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;

@@ -1,17 +1,17 @@
-package br.app.coeur.modules.authentication.service;
+package br.app.coeur.identity.application;
 
-import br.app.coeur.modules.authentication.model.RefreshToken;
-import br.app.coeur.modules.authentication.exception.InvalidCredentialsException;
-import br.app.coeur.modules.authentication.exception.InvalidRefreshTokenException;
+import br.app.coeur.identity.application.dto.request.LoginRequest;
+import br.app.coeur.identity.application.dto.request.RefreshTokenRequest;
+import br.app.coeur.identity.application.dto.response.TokenResponse;
+import br.app.coeur.identity.domain.RefreshToken;
+import br.app.coeur.identity.domain.RefreshTokenRepository;
+import br.app.coeur.identity.domain.exception.InvalidCredentialsException;
+import br.app.coeur.identity.domain.exception.InvalidRefreshTokenException;
 import br.app.coeur.shared.exception.BusinessException;
-import br.app.coeur.modules.user.model.User;
-import br.app.coeur.modules.authentication.dto.LoginRequest;
-import br.app.coeur.modules.authentication.dto.RefreshTokenRequest;
-import br.app.coeur.modules.authentication.dto.TokenResponse;
-import br.app.coeur.modules.authentication.repository.RefreshTokenRepository;
-import br.app.coeur.modules.user.exception.UserBlockedException;
-import br.app.coeur.modules.user.exception.UserNotFoundException;
-import br.app.coeur.modules.user.repository.UserRepository;
+import br.app.coeur.user.domain.User;
+import br.app.coeur.user.domain.UserRepository;
+import br.app.coeur.user.domain.exception.UserBlockedException;
+import br.app.coeur.user.domain.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,24 +60,24 @@ public class AuthService {
 
     private User verifyCredentials(String email, String rawPassword) {
 
-        log.info("[LOGIN] Tentativa de login iniciada para o e-mail: '{}'", email);
+        log.info("[LOGIN] Login attempt started for email: '{}'", email);
 
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> {
-                    log.warn("[LOGIN] Falha no login: e-mail '{}' não está cadastrado no sistema", email);
+                    log.warn("[LOGIN] Login failed: email '{}' is not registered in the system", email);
                     return new InvalidCredentialsException();
                 });
 
         Instant now = Instant.now();
 
         if (user.isLocked(now)) {
-            log.warn("[LOGIN] Falha no login: conta do usuário '{}' " +
-                    "está bloqueada temporariamente até {}", email, user.getLockExpiredAt());
+            log.warn("[LOGIN] Login failed: account '{}' " +
+                    "is temporarily locked until {}", email, user.getLockExpiredAt());
             throw new UserBlockedException();
         }
 
         if (passwordEncoder.matches(rawPassword, user.getPassword())) {
-            log.info("[LOGIN] Login bem-sucedido para o usuário: '{}' (ID: {})", email, user.getId());
+            log.info("[LOGIN] Login succeeded for user: '{}' (ID: {})", email, user.getId());
             user.registerSuccessfulLogin();
             return user;
         }
@@ -85,13 +85,13 @@ public class AuthService {
         user.registerFailedLogin(now);
 
         if (user.isLocked(now)) {
-            log.error("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. " +
-                    "Limite de tentativas atingido! Conta BLOQUEADA temporariamente até {}", email, user.getLockExpiredAt());
+            log.error("[LOGIN] Login failed: incorrect password for email '{}'. " +
+                    "Attempt limit reached! Account temporarily LOCKED until {}", email, user.getLockExpiredAt());
             throw new UserBlockedException();
         }
 
-        log.warn("[LOGIN] Falha no login: senha incorreta para o e-mail '{}'. " +
-                "Tentativas falhas consecutivas: {}/{}", email, user.getFailedAttempts(), User.MAX_FAILED_ATTEMPTS);
+        log.warn("[LOGIN] Login failed: incorrect password for email '{}'. " +
+                "Consecutive failed attempts: {}/{}", email, user.getFailedAttempts(), User.MAX_FAILED_ATTEMPTS);
         throw new InvalidCredentialsException();
     }
 

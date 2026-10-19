@@ -1,4 +1,4 @@
-package br.app.coeur.modules.authentication.config;
+package br.app.coeur.identity.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +23,7 @@ public class JwtKeyConfig {
             this.publicKey = (RSAPublicKey) keyPair.getPublic();
             this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("Falha ao inicializar o gerador de chaves RSA", e);
+            throw new IllegalStateException("Failed to initialize the RSA key generator", e);
         }
     }
 

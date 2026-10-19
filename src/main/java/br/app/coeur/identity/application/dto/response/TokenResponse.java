@@ -1,4 +1,4 @@
-package br.app.coeur.modules.authentication.dto;
+package br.app.coeur.identity.application.dto.response;
 
 public record TokenResponse(
         String accessToken,
