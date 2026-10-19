@@ -1,6 +1,6 @@
-package br.app.coeur.modules.shopping.dto;
+package br.app.coeur.shopping.application.dto.response;
 
-import br.app.coeur.modules.shopping.model.Item;
+import br.app.coeur.shopping.domain.Item;
 
 public record ItemResponse(
         Long id,

@@ -1,17 +1,16 @@
-package br.app.coeur.modules.shopping.service;
+package br.app.coeur.shopping.application;
 
-import br.app.coeur.modules.shopping.dto.AddItemToShoppingListRequest;
-import br.app.coeur.modules.shopping.dto.CreateShoppingListRequest;
-import br.app.coeur.modules.shopping.dto.ShoppingListResponse;
-import br.app.coeur.modules.shopping.dto.UpdateItemQuantityRequest;
-import br.app.coeur.modules.shopping.dto.UpdateShoppingListRequest;
-import br.app.coeur.modules.shopping.exception.ItemNotFoundException;
-import br.app.coeur.modules.shopping.exception.ShoppingListNotFoundException;
-import br.app.coeur.modules.shopping.model.Item;
-import br.app.coeur.modules.shopping.model.ShoppingList;
-import br.app.coeur.modules.shopping.repository.ItemRepository;
-import br.app.coeur.modules.shopping.repository.ShoppingListRepository;
-import br.app.coeur.core.config.CacheConfig;
+import br.app.coeur.shopping.application.dto.request.AddItemToShoppingListRequest;
+import br.app.coeur.shopping.application.dto.request.CreateShoppingListRequest;
+import br.app.coeur.shopping.application.dto.request.UpdateItemQuantityRequest;
+import br.app.coeur.shopping.application.dto.request.UpdateShoppingListRequest;
+import br.app.coeur.shopping.application.dto.response.ShoppingListResponse;
+import br.app.coeur.shopping.domain.Item;
+import br.app.coeur.shopping.domain.ItemRepository;
+import br.app.coeur.shopping.domain.ShoppingList;
+import br.app.coeur.shopping.domain.ShoppingListRepository;
+import br.app.coeur.shopping.domain.exception.ItemNotFoundException;
+import br.app.coeur.shopping.domain.exception.ShoppingListNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -36,7 +35,7 @@ public class ShoppingListService {
         );
     }
 
-    @Cacheable(cacheNames = CacheConfig.SHOPPING_LISTS, key = "#userId + ':' + #id")
+    @Cacheable(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional(readOnly = true)
     public ShoppingListResponse findById(Long userId, Long id) {
         return ShoppingListResponse.from(getShoppingList(userId, id));
@@ -48,7 +47,7 @@ public class ShoppingListService {
                 .map(ShoppingListResponse::from);
     }
 
-    @CacheEvict(cacheNames = CacheConfig.SHOPPING_LISTS, key = "#userId + ':' + #id")
+    @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
     public ShoppingListResponse rename(Long userId, Long id, UpdateShoppingListRequest request) {
         ShoppingList shoppingList = getShoppingList(userId, id);
@@ -56,7 +55,7 @@ public class ShoppingListService {
         return ShoppingListResponse.from(shoppingList);
     }
 
-    @CacheEvict(cacheNames = CacheConfig.SHOPPING_LISTS, key = "#userId + ':' + #id")
+    @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
     public void delete(Long userId, Long id) {
         shoppingListRepository.delete(
@@ -64,7 +63,7 @@ public class ShoppingListService {
         );
     }
 
-    @CacheEvict(cacheNames = CacheConfig.SHOPPING_LISTS, key = "#userId + ':' + #id")
+    @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
     public ShoppingListResponse addItem(Long userId, Long id, AddItemToShoppingListRequest request) {
         ShoppingList shoppingList = getShoppingList(userId, id);
@@ -75,7 +74,7 @@ public class ShoppingListService {
         return ShoppingListResponse.from(shoppingList);
     }
 
-    @CacheEvict(cacheNames = CacheConfig.SHOPPING_LISTS, key = "#userId + ':' + #id")
+    @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
     public ShoppingListResponse removeItem(Long userId, Long id, Long itemId) {
         ShoppingList shoppingList = getShoppingList(userId, id);
@@ -86,7 +85,7 @@ public class ShoppingListService {
         return ShoppingListResponse.from(shoppingList);
     }
 
-    @CacheEvict(cacheNames = CacheConfig.SHOPPING_LISTS, key = "#userId + ':' + #id")
+    @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
     public ShoppingListResponse changeItemQuantity(Long userId, Long id, Long itemId, UpdateItemQuantityRequest request) {
         ShoppingList shoppingList = getShoppingList(userId, id);

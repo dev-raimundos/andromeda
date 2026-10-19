@@ -1,4 +1,4 @@
-package br.app.coeur.modules.shopping.model;
+package br.app.coeur.shopping.domain;
 
 import br.app.coeur.shared.persistence.BaseEntity;
 import jakarta.persistence.Column;
@@ -14,7 +14,7 @@ import lombok.Getter;
 @Getter
 @Entity
 @Table(name = "shopping_list_items")
-public class ItemList extends BaseEntity<Long> {
+public class ShoppingListItem extends BaseEntity<Long> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,18 +34,18 @@ public class ItemList extends BaseEntity<Long> {
     @Column(nullable = false)
     private boolean purchased;
 
-    protected ItemList() {
+    protected ShoppingListItem() {
     }
 
-    private ItemList(ShoppingList shoppingList, Item item, int quantity) {
+    private ShoppingListItem(ShoppingList shoppingList, Item item, int quantity) {
         this.shoppingList = shoppingList;
         this.item = item;
         this.quantity = requirePositive(quantity);
         this.purchased = false;
     }
 
-    static ItemList of(ShoppingList shoppingList, Item item, int quantity) {
-        return new ItemList(shoppingList, item, quantity);
+    static ShoppingListItem of(ShoppingList shoppingList, Item item, int quantity) {
+        return new ShoppingListItem(shoppingList, item, quantity);
     }
 
     public void increaseQuantity(int amount) {
@@ -70,7 +70,7 @@ public class ItemList extends BaseEntity<Long> {
 
     private static int requirePositive(int value) {
         if (value <= 0) {
-            throw new IllegalArgumentException("Quantidade deve ser maior que zero.");
+            throw new IllegalArgumentException("Quantity must be greater than zero.");
         }
         return value;
     }

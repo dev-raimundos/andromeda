@@ -1,4 +1,4 @@
-package br.app.coeur.modules.shopping.model;
+package br.app.coeur.shopping.domain;
 
 import br.app.coeur.shared.persistence.BaseEntity;
 import jakarta.persistence.Column;
@@ -36,11 +36,11 @@ public class Item extends BaseEntity<Long> {
     }
 
     private Item(String name, String description, Double price, String url, String brand) {
-        this.name = requireText(name, "Nome é obrigatório.");
-        this.description = requireText(description, "Descrição é obrigatória.");
+        this.name = requireText(name, "Name is required.");
+        this.description = requireText(description, "Description is required.");
         this.price = requirePositive(price);
         this.url = url;
-        this.brand = requireText(brand, "Marca é obrigatória.");
+        this.brand = requireText(brand, "Brand is required.");
     }
 
     public static Item create(String name, String description, Double price, String url, String brand) {
@@ -48,11 +48,11 @@ public class Item extends BaseEntity<Long> {
     }
 
     public void rename(String name) {
-        this.name = requireText(name, "Nome é obrigatório.");
+        this.name = requireText(name, "Name is required.");
     }
 
     public void changeDescription(String description) {
-        this.description = requireText(description, "Descrição é obrigatória.");
+        this.description = requireText(description, "Description is required.");
     }
 
     public void changePrice(Double price) {
@@ -64,7 +64,7 @@ public class Item extends BaseEntity<Long> {
     }
 
     public void changeBrand(String brand) {
-        this.brand = requireText(brand, "Marca é obrigatória.");
+        this.brand = requireText(brand, "Brand is required.");
     }
 
     private static String requireText(String value, String message) {
@@ -76,7 +76,7 @@ public class Item extends BaseEntity<Long> {
 
     private static Double requirePositive(Double value) {
         if (value == null || value < 0) {
-            throw new IllegalArgumentException("Preço não pode ser negativo.");
+            throw new IllegalArgumentException("Price cannot be negative.");
         }
         return value;
     }

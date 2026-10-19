@@ -1,7 +1,7 @@
-package br.app.coeur.modules.shopping.model;
+package br.app.coeur.shopping.domain;
 
-import br.app.coeur.modules.shopping.exception.ItemNotInShoppingListException;
 import br.app.coeur.shared.persistence.BaseEntity;
+import br.app.coeur.shopping.domain.exception.ItemNotInShoppingListException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,14 +32,14 @@ public class ShoppingList extends BaseEntity<Long> {
     private Long userId;
 
     @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<ItemList> items = new ArrayList<>();
+    private final List<ShoppingListItem> items = new ArrayList<>();
 
     protected ShoppingList() {
     }
 
     private ShoppingList(String name, Long userId) {
-        this.name = requireText(name, "Nome é obrigatório.");
-        this.userId = requireNonNull(userId, "Usuário é obrigatório.");
+        this.name = requireText(name, "Name is required.");
+        this.userId = requireNonNull(userId, "User is required.");
     }
 
     public static ShoppingList create(String name, Long userId) {
@@ -47,36 +47,36 @@ public class ShoppingList extends BaseEntity<Long> {
     }
 
     public void rename(String name) {
-        this.name = requireText(name, "Nome é obrigatório.");
+        this.name = requireText(name, "Name is required.");
     }
 
-    public ItemList addItem(Item item, int quantity) {
+    public ShoppingListItem addItem(Item item, int quantity) {
 
-        Optional<ItemList> existing = findItemOf(item);
+        Optional<ShoppingListItem> existing = findItemOf(item);
 
         if (existing.isPresent()) {
             existing.get().increaseQuantity(quantity);
             return existing.get();
         }
 
-        ItemList itemList = ItemList.of(this, item, quantity);
-        this.items.add(itemList);
-        return itemList;
+        ShoppingListItem shoppingListItem = ShoppingListItem.of(this, item, quantity);
+        this.items.add(shoppingListItem);
+        return shoppingListItem;
     }
 
     public void removeItem(Item item) {
-        ItemList itemList = findItemOf(item).orElseThrow(ItemNotInShoppingListException::new);
-        this.items.remove(itemList);
+        ShoppingListItem shoppingListItem = findItemOf(item).orElseThrow(ItemNotInShoppingListException::new);
+        this.items.remove(shoppingListItem);
     }
 
     public void changeItemQuantity(Item item, int quantity) {
-        ItemList itemList = findItemOf(item).orElseThrow(ItemNotInShoppingListException::new);
-        itemList.changeQuantity(quantity);
+        ShoppingListItem shoppingListItem = findItemOf(item).orElseThrow(ItemNotInShoppingListException::new);
+        shoppingListItem.changeQuantity(quantity);
     }
 
-    private Optional<ItemList> findItemOf(Item item) {
+    private Optional<ShoppingListItem> findItemOf(Item item) {
         return this.items.stream()
-                .filter(itemList -> itemList.getItem().equals(item))
+                .filter(shoppingListItem -> shoppingListItem.getItem().equals(item))
                 .findFirst();
     }
 

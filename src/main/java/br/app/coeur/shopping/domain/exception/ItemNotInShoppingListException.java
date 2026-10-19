@@ -1,11 +1,11 @@
-package br.app.coeur.modules.shopping.exception;
+package br.app.coeur.shopping.domain.exception;
 
 import br.app.coeur.shared.exception.ResourceNotFoundException;
 
-/** Indica que o item não faz parte da lista de compras informada. */
+/** Indicates that the item is not part of the given shopping list. */
 public class ItemNotInShoppingListException extends ResourceNotFoundException {
 
     public ItemNotInShoppingListException() {
-        super("Item não encontrado na lista de compras.");
+        super("Item not found in the shopping list.");
     }
 }

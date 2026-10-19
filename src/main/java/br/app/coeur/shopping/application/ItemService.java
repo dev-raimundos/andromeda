@@ -1,11 +1,11 @@
-package br.app.coeur.modules.shopping.service;
+package br.app.coeur.shopping.application;
 
-import br.app.coeur.modules.shopping.dto.CreateItemRequest;
-import br.app.coeur.modules.shopping.dto.ItemResponse;
-import br.app.coeur.modules.shopping.dto.UpdateItemRequest;
-import br.app.coeur.modules.shopping.exception.ItemNotFoundException;
-import br.app.coeur.modules.shopping.model.Item;
-import br.app.coeur.modules.shopping.repository.ItemRepository;
+import br.app.coeur.shopping.application.dto.request.CreateItemRequest;
+import br.app.coeur.shopping.application.dto.request.UpdateItemRequest;
+import br.app.coeur.shopping.application.dto.response.ItemResponse;
+import br.app.coeur.shopping.domain.Item;
+import br.app.coeur.shopping.domain.ItemRepository;
+import br.app.coeur.shopping.domain.exception.ItemNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -1,11 +1,11 @@
-package br.app.coeur.modules.shopping.exception;
+package br.app.coeur.shopping.domain.exception;
 
 import br.app.coeur.shared.exception.ResourceNotFoundException;
 
-/** Indica que o item pesquisado não existe. */
+/** Indicates that the requested item does not exist. */
 public class ItemNotFoundException extends ResourceNotFoundException {
 
     public ItemNotFoundException() {
-        super("Item não encontrado.");
+        super("Item not found.");
     }
 }
