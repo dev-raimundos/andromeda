@@ -1,76 +1,97 @@
 # Andromeda API
 
-API backend da plataforma Coeur, construída em Spring Boot 4 / Java 21, com módulos de autenticação, usuários e compras.
+Coeur platform backend API, built with Spring Boot 4 / Java 21, with authentication, user, and shopping modules.
 
 ## Stack
 
-- **Java 21** (virtual threads habilitadas)
+- **Java 21** (virtual threads enabled)
 - **Spring Boot 4.1.1** — Web MVC, Data JPA, Security, OAuth2 Resource Server
-- **PostgreSQL 18** (servidor externo/on-premise) + **Flyway** para migrações
-- **Redis** (servidor externo) — cache / rate limiting
-- **springdoc-openapi** — documentação Swagger
+- **Spring Modulith** — enforces module boundaries within the single Maven artifact
+- **PostgreSQL 18** (external/on-premise server) + **Flyway** for migrations
+- **Redis** (external server) — cache / rate limiting
+- **springdoc-openapi** — Swagger documentation
 - **Lombok**
-- **JUnit 5 + Spring Boot Test + H2** — testes
-- **JaCoCo + SonarCloud** — cobertura e qualidade de código
+- **JUnit 5 + Spring Boot Test + H2** — tests
+- **JaCoCo + SonarCloud** — coverage and code quality
 - **Docker / Docker Compose**
 
-## Arquitetura
+## Architecture
 
-O projeto segue uma organização modular por domínio (feature-based), com um núcleo de infraestrutura compartilhada:
+The project is a single Maven artifact (`br.app.coeur:api`) organized as a **modular monolith**:
+each business module lives in its own top-level package under `br.app.coeur`, and
+[Spring Modulith](https://spring.io/projects/spring-modulith) verifies at test time
+(`ModularityTests`) that modules only reach each other through explicitly declared APIs —
+not just by convention. This keeps the codebase ready for new modules to be added later
+without their boundaries eroding over time.
 
 ```
 src/main/java/br/app/coeur/
-├── core/                    # Configurações e infraestrutura transversal
-│   ├── config/              # GlobalExceptionHandler, OpenApiConfig, WebConfig
-│   ├── exception/           # Exceções de infraestrutura (ex.: RateLimitExceededException)
-│   ├── filter/               # RateLimitingFilter
-│   └── health/               # Endpoint de health check simples
-├── modules/
-│   ├── authentication/      # Login, refresh token, configuração de segurança/JWT
-│   ├── user/                 # Cadastro, consulta, atualização e remoção de usuários
-│   └── shopping/             # Módulo de compras (em desenvolvimento)
-└── shared/
-    └── persistence/          # BaseEntity (equals/hashCode seguros para proxies do Hibernate)
+├── api/                  # OPEN module: cross-cutting configuration of the "api" artifact itself
+│   ├── config/           # CacheConfig, GlobalExceptionHandler, OpenApiConfig, WebConfig, ...
+│   ├── exception/        # Infrastructure-level exceptions (e.g. RateLimitExceededException)
+│   ├── filter/           # RateLimitingFilter
+│   └── health/           # Simple health check endpoint
+├── shared/               # OPEN module: shared kernel
+│   ├── exception/        # BusinessException, ConflictException, ResourceNotFoundException
+│   ├── persistence/      # BaseEntity (safe equals/hashCode for Hibernate proxies)
+│   ├── security/         # @CurrentUserId and its argument resolver
+│   └── util/             # JwtUtils
+├── identity/             # Login, refresh tokens, JWT/security configuration
+├── user/                 # User registration, lookup, update, and removal
+└── shopping/             # Shopping lists and item catalog
 ```
 
-Cada módulo de negócio segue o padrão:
+Each business module follows Clean Architecture layering internally:
 
 ```
-modules/<nome>/
-├── controller/    # Endpoints REST
-├── domain/        # Entidades com comportamento (ex.: User.register, user.changeEmail)
-├── dto/           # Requests/Responses
-├── exception/     # Exceções específicas da regra de negócio do módulo
-├── repository/    # Spring Data JPA
-└── service/       # Orquestração de casos de uso, transações
+<module>/
+├── domain/               # Entities with behavior, domain exceptions, repository ports (plain interfaces)
+├── application/          # Use-case services, transactions, request/response DTOs
+└── infrastructure/
+    ├── web/              # REST controllers
+    ├── persistence/      # Spring Data JPA repositories implementing the domain ports
+    └── config/           # Module-specific framework configuration (if any)
 ```
 
-## Autenticação
+`api` and `shared` are declared as **open** Spring Modulith modules (`@ApplicationModule(type = OPEN)`),
+so any module can use them freely. Business modules are closed by default: only the `domain`
+package of a module is visible to others, and only when explicitly exposed as a
+`@NamedInterface`. Today `identity` is the only module that depends on another
+(`user::domain`, to look up the user during login/refresh); this dependency is declared
+explicitly in `identity/package-info.java` and enforced by `ModularityTests`.
 
-- OAuth2 Resource Server com validação de JWT (chaves configuradas em `JwtKeyConfig`).
-- Endpoints de login e refresh token em `/api/auth`.
-- Configuração de segurança centralizada em `SecurityConfig`.
+## Authentication
 
-## Endpoints principais
+- OAuth2 Resource Server with JWT validation (keys configured in `JwtKeyConfig`).
+- Login and refresh token endpoints under `/api/auth`.
+- Security configuration centralized in `SecurityConfig`.
 
-| Método | Rota | Descrição |
+## Main endpoints
+
+| Method | Route | Description |
 |---|---|---|
-| POST | `/api/auth/login` | Autentica usuário e emite tokens |
-| POST | `/api/auth/refresh` | Renova o access token a partir de um refresh token |
-| POST | `/api/users/register` | Registra novo usuário |
-| GET | `/api/users/me` | Retorna o usuário autenticado |
-| GET | `/api/users` | Lista usuários (paginado) |
-| GET | `/api/users/{id}` | Busca usuário por id |
-| PUT | `/api/users/{id}` | Atualiza usuário |
-| DELETE | `/api/users/{id}` | Remove usuário |
-| GET | `/health` | Health check simples |
-| GET | `/actuator/**` | Endpoints do Spring Actuator |
+| POST | `/api/auth/login` | Authenticates the user and issues tokens |
+| POST | `/api/auth/refresh` | Renews the access token from a refresh token |
+| POST | `/api/users/register` | Registers a new user |
+| GET | `/api/users/me` | Returns the authenticated user |
+| GET | `/api/users` | Lists users (paginated) |
+| GET | `/api/users/{id}` | Finds a user by ID |
+| PUT | `/api/users/{id}` | Updates a user |
+| DELETE | `/api/users/{id}` | Removes a user |
+| GET | `/api/items` | Lists catalog items (paginated) |
+| POST | `/api/items` | Registers a new catalog item |
+| GET | `/api/shopping-lists` | Lists the authenticated user's shopping lists |
+| POST | `/api/shopping-lists` | Creates a new shopping list |
+| POST | `/api/shopping-lists/{id}/items` | Adds an item to a shopping list |
+| GET | `/health` | Simple health check |
+| GET | `/actuator/**` | Spring Actuator endpoints |
 
-Com o perfil `dev` ativo, a documentação interativa fica disponível em `/swagger-ui.html`. Em outros perfis, o Swagger é desabilitado por padrão (`application.yaml`).
+With the `dev` profile active, interactive documentation is available at `/swagger-ui.html`.
+In other profiles, Swagger is disabled by default (`application.yaml`).
 
-## Configuração de ambiente
+## Environment configuration
 
-Copie `.env.example` para `.env` e preencha as variáveis:
+Copy `.env.example` to `.env` and fill in the variables:
 
 ```
 SPRING_PROFILES_ACTIVE=dev
@@ -78,8 +99,8 @@ APP_PORT=8080
 COMPOSE_PROFILES=
 
 DATABASE_URL=jdbc:postgresql://<host>:5432/<database>
-DATABASE_USERNAME=<usuario>
-DATABASE_PASSWORD=<senha>
+DATABASE_USERNAME=<user>
+DATABASE_PASSWORD=<password>
 
 FLYWAY_ENABLED=true
 
@@ -88,37 +109,45 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 ```
 
-O `application.yaml` carrega o `.env` da raiz automaticamente (`spring.config.import: optional:file:.env`) quando a aplicação roda pela IDE/Maven. Variáveis de ambiente reais (ex.: definidas pelo Docker Compose) têm precedência sobre o `.env`.
+`application.yaml` automatically loads `.env` from the project root
+(`spring.config.import: optional:file:.env`) when the application runs via the IDE/Maven.
+Real environment variables (e.g. set by Docker Compose) take precedence over `.env`.
 
-## Como rodar
+## Running the project
 
-### Localmente (IDE/Maven)
+### Locally (IDE/Maven)
 
-Pré-requisitos: Java 21 e acesso ao Postgres e ao Redis externos definidos no `.env`.
+Prerequisites: Java 21 and access to the external Postgres and Redis defined in `.env`.
 
 ```bash
-# com o .env preenchido na raiz
+# with .env filled in at the project root
 ./mvnw spring-boot:run
 ```
 
-A aplicação sobe em `http://localhost:8080` com o perfil `dev` por padrão. Postgres e Redis são sempre externos — não há containers locais para eles; o Flyway roda as migrations direto no Postgres externo.
+The application starts at `http://localhost:8080` with the `dev` profile by default.
+Postgres and Redis are always external — there are no local containers for them; Flyway
+runs migrations directly against the external Postgres.
 
 ### Via Docker Compose
 
-O `compose.yaml` não sobe mais nenhuma dependência local (Postgres e Redis são sempre externos). Ele só é usado para buildar e rodar a própria aplicação em container, com o profile `prod`:
+`compose.yaml` no longer starts any local dependency (Postgres and Redis are always
+external). It is only used to build and run the application itself in a container, with
+the `prod` profile:
 
 ```bash
-# aplicação containerizada (usa DATABASE_URL/REDIS_HOST externos do .env)
+# containerized application (uses the external DATABASE_URL/REDIS_HOST from .env)
 COMPOSE_PROFILES=prod docker compose up -d --build
 ```
 
-### Testes
+### Tests
 
 ```bash
 ./mvnw test
 ```
 
-Os testes de persistência/integração usam H2 em memória; não dependem do Postgres externo.
+Persistence/integration tests use an in-memory H2 database and do not depend on the
+external Postgres. The suite also includes `ModularityTests`, which fails the build if a
+module boundary is violated.
 
 ### Build
 
@@ -126,30 +155,36 @@ Os testes de persistência/integração usam H2 em memória; não dependem do Po
 ./mvnw clean package
 ```
 
-Gera o jar em `target/`. O `Dockerfile` faz build multi-stage (`eclipse-temurin:21-jdk-jammy` → `eclipse-temurin:21-jre-jammy`), empacotando o jar final em uma imagem de runtime JRE.
+Produces the jar under `target/`. The `Dockerfile` performs a multi-stage build
+(`eclipse-temurin:21-jdk-jammy` → `eclipse-temurin:21-jre-jammy`), packaging the final jar
+into a JRE runtime image.
 
-## Banco de dados
+## Database
 
-Migrações gerenciadas pelo Flyway em `src/main/resources/db/migration`:
+Migrations managed by Flyway under `src/main/resources/db/migration`:
 
 - `V1__create_tables.sql`
 - `V2__add_user_lock_fields.sql`
+- `V3__create_shopping_tables.sql`
 
-`ddl-auto` do Hibernate está fixado em `none` — qualquer alteração de schema deve passar por uma nova migração Flyway.
+Hibernate's `ddl-auto` is fixed to `none` — any schema change must go through a new Flyway
+migration.
 
 ## CI/CD
 
-Pipeline definido em `.github/workflows/ci-cd.yml`, disparado em push para `main`:
+Pipeline defined in `.github/workflows/ci-cd.yml`, triggered on push to `main`:
 
-1. **Testes** — `./mvnw test` (com retry automático em caso de falha transitória).
-2. **SonarQube** — `./mvnw verify sonar:sonar`, com cobertura de testes via JaCoCo publicada no SonarCloud.
-3. **Deploy** — dispara webhook do Dokploy para deploy em produção.
+1. **Tests** — `./mvnw test` (with automatic retry on transient failure).
+2. **SonarQube** — `./mvnw verify sonar:sonar`, with JaCoCo test coverage published to
+   SonarCloud.
+3. **Deploy** — triggers a Dokploy webhook to deploy to production.
 
-## Observabilidade
+## Observability
 
-- `spring-boot-starter-actuator` habilitado — expõe endpoints de métricas/health padrão do Spring em `/actuator`.
-- Endpoint `/health` próprio, usado pelo healthcheck do container no `compose.yaml`.
+- `spring-boot-starter-actuator` enabled — exposes Spring's standard metrics/health
+  endpoints at `/actuator`.
+- A dedicated `/health` endpoint, used by the container healthcheck in `compose.yaml`.
 
-## Licença
+## License
 
-Distribuído sob a licença MIT — veja [LICENSE](LICENSE).
+Distributed under the MIT license — see [LICENSE](LICENSE).
