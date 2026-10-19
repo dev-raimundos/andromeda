@@ -9,8 +9,8 @@ spring:
     virtual:
       enabled: true
 
-  # Carrega o .env da raiz do projeto ao rodar pela IDE/Maven.
-  # Variáveis de ambiente reais (ex.: Docker Compose) têm precedência.
+  # Loads the .env file from the project root when running via IDE/Maven.
+  # Real environment variables (e.g. Docker Compose) take precedence.
   config:
     import: optional:file:.env[.properties]
 
@@ -35,8 +35,8 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
-# Documentação da API (Swagger/OpenAPI) desabilitada por padrão.
-# Reabilitada apenas no perfil "dev" (ver application-dev.yaml).
+# API documentation (Swagger/OpenAPI) disabled by default.
+# Re-enabled only in the "dev" profile (see application-dev.yaml).
 springdoc:
   api-docs:
     enabled: false
