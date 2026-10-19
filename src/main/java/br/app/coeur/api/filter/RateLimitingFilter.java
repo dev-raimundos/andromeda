@@ -1,6 +1,6 @@
-package br.app.coeur.core.filter;
+package br.app.coeur.api.filter;
 
-import br.app.coeur.core.exception.RateLimitExceededException;
+import br.app.coeur.api.exception.RateLimitExceededException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

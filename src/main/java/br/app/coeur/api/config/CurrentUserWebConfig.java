@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.api.config;
 
 import br.app.coeur.shared.security.CurrentUserIdArgumentResolver;
 import lombok.RequiredArgsConstructor;

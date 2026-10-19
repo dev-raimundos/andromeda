@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.api.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;

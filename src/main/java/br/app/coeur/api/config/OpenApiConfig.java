@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.api.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -18,7 +18,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Coeur API")
                         .version("v1.0.0")
-                        .description("API REST do monólito modular Coeur - Sistema de Autenticação e Gestão de Usuários"))
+                        .description("REST API for the Coeur modular monolith - Authentication and User Management System"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
@@ -27,6 +27,6 @@ public class OpenApiConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("Insira o seu Bearer Token JWT para acessar as rotas protegidas")));
+                                        .description("Enter your Bearer JWT token to access protected routes")));
     }
 }

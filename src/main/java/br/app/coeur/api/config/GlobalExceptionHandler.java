@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.api.config;
 
 import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ConflictException;
@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleResourceNotFound(ResourceNotFoundException ex) {
-        log.warn("[EXCEPTION] Recurso não encontrado: {}", ex.getMessage());
+        log.warn("[EXCEPTION] Resource not found: {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage()
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail handleConflict(ConflictException ex) {
-        log.warn("[EXCEPTION] Conflito de dados: {}", ex.getMessage());
+        log.warn("[EXCEPTION] Data conflict: {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT,
                 ex.getMessage()
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusiness(BusinessException ex) {
-        log.warn("[EXCEPTION] Regra de negócio violada: {}", ex.getMessage());
+        log.warn("[EXCEPTION] Business rule violated: {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage());
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
-        log.warn("[EXCEPTION] Argumento inválido: {}", ex.getMessage());
+        log.warn("[EXCEPTION] Invalid argument: {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage()
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
-                "Dados de entrada inválidos."
+                "Invalid input data."
         );
         Map<String, String> errors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(
@@ -69,44 +69,44 @@ public class GlobalExceptionHandler {
                         error.getDefaultMessage()
                 )
         );
-        log.warn("[EXCEPTION] Falha de validação nos campos: {}", errors);
+        log.warn("[EXCEPTION] Validation failed for fields: {}", errors);
         problem.setProperty("errors", errors);
         return problem;
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleUnreadableMessage(HttpMessageNotReadableException ex) {
-        log.warn("[EXCEPTION] Corpo da requisição ausente ou malformado: {}", ex.getMessage());
+        log.warn("[EXCEPTION] Missing or malformed request body: {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
-                "Corpo da requisição ausente ou malformado."
+                "Missing or malformed request body."
         );
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleNoResourceFound(NoResourceFoundException ex) {
-        log.warn("[EXCEPTION] Rota não encontrada: {}", ex.getMessage());
+        log.warn("[EXCEPTION] Route not found: {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND,
-                "Recurso não encontrado."
+                "Resource not found."
         );
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        log.warn("[EXCEPTION] Parâmetro '{}' com valor inválido: '{}'", ex.getName(), ex.getValue());
+        log.warn("[EXCEPTION] Parameter '{}' has invalid value: '{}'", ex.getName(), ex.getValue());
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
-                "Parâmetro '%s' com valor inválido.".formatted(ex.getName())
+                "Parameter '%s' has an invalid value.".formatted(ex.getName())
         );
     }
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex) {
-        log.error("[EXCEPTION] Erro inesperado: {}", ex.getMessage(), ex);
+        log.error("[EXCEPTION] Unexpected error: {}", ex.getMessage(), ex);
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Erro interno do servidor."
+                "Internal server error."
         );
     }
 }

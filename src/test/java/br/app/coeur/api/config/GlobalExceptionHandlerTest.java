@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.api.config;
 
 import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ConflictException;
@@ -24,46 +24,46 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldMapResourceNotFoundToNotFound() {
-        ProblemDetail problem = handler.handleResourceNotFound(new ResourceNotFoundException("Usuário não encontrado."));
+        ProblemDetail problem = handler.handleResourceNotFound(new ResourceNotFoundException("User not found."));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
-        assertThat(problem.getDetail()).isEqualTo("Usuário não encontrado.");
+        assertThat(problem.getDetail()).isEqualTo("User not found.");
     }
 
     @Test
     void shouldMapConflictToConflict() {
-        ProblemDetail problem = handler.handleConflict(new ConflictException("E-mail já está em uso."));
+        ProblemDetail problem = handler.handleConflict(new ConflictException("Email is already in use."));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
-        assertThat(problem.getDetail()).isEqualTo("E-mail já está em uso.");
+        assertThat(problem.getDetail()).isEqualTo("Email is already in use.");
     }
 
     @Test
     void shouldMapBusinessToBadRequest() {
-        ProblemDetail problem = handler.handleBusiness(new BusinessException("Credenciais inválidas."));
+        ProblemDetail problem = handler.handleBusiness(new BusinessException("Invalid credentials."));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(problem.getDetail()).isEqualTo("Credenciais inválidas.");
+        assertThat(problem.getDetail()).isEqualTo("Invalid credentials.");
     }
 
     @Test
     void shouldMapIllegalArgumentToBadRequest() {
-        ProblemDetail problem = handler.handleIllegalArgument(new IllegalArgumentException("Nome é obrigatório."));
+        ProblemDetail problem = handler.handleIllegalArgument(new IllegalArgumentException("Name is required."));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(problem.getDetail()).isEqualTo("Nome é obrigatório.");
+        assertThat(problem.getDetail()).isEqualTo("Name is required.");
     }
 
     @Test
     void shouldListInvalidFieldsOnValidationError() throws Exception {
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "request");
-        bindingResult.addError(new FieldError("request", "email", "E-mail inválido."));
+        bindingResult.addError(new FieldError("request", "email", "Invalid email."));
         MethodParameter parameter = new MethodParameter(Object.class.getMethod("toString"), -1);
 
         ProblemDetail problem = handler.handleValidation(new MethodArgumentNotValidException(parameter, bindingResult));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(problem.getProperties()).containsEntry("errors", Map.of("email", "E-mail inválido."));
+        assertThat(problem.getProperties()).containsEntry("errors", Map.of("email", "Invalid email."));
     }
 
     @Test
@@ -75,7 +75,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleUnreadableMessage(ex);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(problem.getDetail()).isEqualTo("Corpo da requisição ausente ou malformado.");
+        assertThat(problem.getDetail()).isEqualTo("Missing or malformed request body.");
     }
 
     @Test
@@ -87,12 +87,12 @@ class GlobalExceptionHandlerTest {
         ProblemDetail problem = handler.handleTypeMismatch(ex);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        assertThat(problem.getDetail()).isEqualTo("Parâmetro 'id' com valor inválido.");
+        assertThat(problem.getDetail()).isEqualTo("Parameter 'id' has an invalid value.");
     }
 
     @Test
     void shouldHideInternalDetailsOnUnexpectedError() {
-        ProblemDetail problem = handler.handleUnexpected(new IllegalStateException("senha do banco: 1234"));
+        ProblemDetail problem = handler.handleUnexpected(new IllegalStateException("database password: 1234"));
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
         assertThat(problem.getDetail()).doesNotContain("1234");

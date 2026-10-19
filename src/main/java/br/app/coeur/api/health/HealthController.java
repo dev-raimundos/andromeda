@@ -1,4 +1,4 @@
-package br.app.coeur.core.health;
+package br.app.coeur.api.health;
 
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
