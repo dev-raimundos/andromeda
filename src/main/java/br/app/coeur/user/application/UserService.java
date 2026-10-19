@@ -1,12 +1,12 @@
-package br.app.coeur.modules.user.service;
+package br.app.coeur.user.application;
 
-import br.app.coeur.modules.user.model.User;
-import br.app.coeur.modules.user.dto.RegisterUserRequest;
-import br.app.coeur.modules.user.dto.UpdateUserRequest;
-import br.app.coeur.modules.user.dto.UserResponse;
-import br.app.coeur.modules.user.exception.EmailAlreadyInUseException;
-import br.app.coeur.modules.user.exception.UserNotFoundException;
-import br.app.coeur.modules.user.repository.UserRepository;
+import br.app.coeur.user.application.dto.request.RegisterUserRequest;
+import br.app.coeur.user.application.dto.request.UpdateUserRequest;
+import br.app.coeur.user.application.dto.response.UserResponse;
+import br.app.coeur.user.domain.User;
+import br.app.coeur.user.domain.UserRepository;
+import br.app.coeur.user.domain.exception.EmailAlreadyInUseException;
+import br.app.coeur.user.domain.exception.UserNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

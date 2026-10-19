@@ -1,11 +1,11 @@
-package br.app.coeur.modules.user.exception;
+package br.app.coeur.user.domain.exception;
 
 import br.app.coeur.shared.exception.ResourceNotFoundException;
 
-/** Indica que o usuário pesquisado não existe. */
+/** Indicates that the requested user does not exist. */
 public class UserNotFoundException extends ResourceNotFoundException {
 
     public UserNotFoundException() {
-        super("Usuário não encontrado.");
+        super("User not found.");
     }
 }

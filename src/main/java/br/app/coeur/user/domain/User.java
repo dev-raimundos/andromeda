@@ -1,4 +1,4 @@
-package br.app.coeur.modules.user.model;
+package br.app.coeur.user.domain;
 
 import br.app.coeur.shared.persistence.BaseEntity;
 import jakarta.persistence.*;
@@ -42,9 +42,9 @@ public class User extends BaseEntity<Long> {
     }
 
     private User(String email, String password, String name) {
-        this.email = requireText(email, "E-mail é obrigatório.");
-        this.password = requireText(password, "Senha é obrigatória.");
-        this.name = requireText(name, "Nome é obrigatório.");
+        this.email = requireText(email, "Email is required.");
+        this.password = requireText(password, "Password is required.");
+        this.name = requireText(name, "Name is required.");
         this.roles = DEFAULT_ROLE;
     }
 
@@ -71,15 +71,15 @@ public class User extends BaseEntity<Long> {
     }
 
     public void changeEmail(String email) {
-        this.email = requireText(email, "E-mail é obrigatório.");
+        this.email = requireText(email, "Email is required.");
     }
 
     public void rename(String name) {
-        this.name = requireText(name, "Nome é obrigatório.");
+        this.name = requireText(name, "Name is required.");
     }
 
     public void changeRoles(String roles) {
-        this.roles = requireText(roles, "Perfis são obrigatórios.");
+        this.roles = requireText(roles, "Roles are required.");
     }
 
     private static String requireText(String value, String message) {
