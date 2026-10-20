@@ -70,7 +70,7 @@ public class RateLimitingFilter implements Filter {
         public TokenBucket(long capacity, long refillPeriodSeconds) {
             this.capacity = capacity;
             this.refillPeriodSeconds = refillPeriodSeconds;
-            this.tokens = capacity;
+            this.tokens = (double) capacity;
             this.lastRefill = Instant.now();
         }
 
@@ -88,7 +88,7 @@ public class RateLimitingFilter implements Filter {
             double elapsedSeconds = Duration.between(lastRefill, now).toMillis() / 1000.0;
             double tokensToAdd = elapsedSeconds * ((double) capacity / refillPeriodSeconds);
             if (tokensToAdd > 0) {
-                tokens = Math.min(capacity, tokens + tokensToAdd);
+                tokens = Math.min((double) capacity, tokens + tokensToAdd);
                 lastRefill = now;
             }
         }
