@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 /**
  * Injects the authenticated user's ID (JWT {@code sub} claim) into the parameter.
- * The parameter must be of type {@link Long}.
+ * The parameter must be of type {@link java.util.UUID}.
  *
  * <p>Resolved by {@link CurrentUserIdArgumentResolver}.</p>
  */
