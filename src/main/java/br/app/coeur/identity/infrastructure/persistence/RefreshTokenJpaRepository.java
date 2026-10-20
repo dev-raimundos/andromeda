@@ -7,10 +7,12 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface RefreshTokenJpaRepository extends RefreshTokenRepository, JpaRepository<RefreshToken, Long> {
+import java.util.UUID;
+
+public interface RefreshTokenJpaRepository extends RefreshTokenRepository, JpaRepository<RefreshToken, UUID> {
 
     @Override
     @Modifying(flushAutomatically = true)
     @Query("UPDATE RefreshToken t SET t.revoked = true WHERE t.userId = :userId AND t.revoked = false")
-    void revokeAllByUserId(@Param("userId") Long userId);
+    void revokeAllByUserId(@Param("userId") UUID userId);
 }
