@@ -4,5 +4,7 @@ import br.app.coeur.user.domain.User;
 import br.app.coeur.user.domain.UserRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserJpaRepository extends UserRepository, JpaRepository<User, Long> {
+import java.util.UUID;
+
+public interface UserJpaRepository extends UserRepository, JpaRepository<User, UUID> {
 }

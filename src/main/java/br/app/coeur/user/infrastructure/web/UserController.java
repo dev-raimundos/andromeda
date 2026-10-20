@@ -16,6 +16,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -43,7 +45,7 @@ public class UserController {
     )
     @ApiResponse(responseCode = "200", description = "Data retrieved successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized / missing or invalid JWT token")
-    public UserResponse me(@CurrentUserId Long userId) {
+    public UserResponse me(@CurrentUserId UUID userId) {
         return userService.findById(userId);
     }
 
@@ -66,7 +68,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "User found successfully")
     @ApiResponse(responseCode = "400", description = "User not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public UserResponse getById(@PathVariable Long id) {
+    public UserResponse getById(@PathVariable UUID id) {
         return userService.findById(id);
     }
 
@@ -78,7 +80,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "User updated successfully")
     @ApiResponse(responseCode = "400", description = "Invalid ID, email already in use, or inconsistent data")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest request) {
+    public UserResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequest request) {
         return userService.update(id, request);
     }
 
@@ -91,7 +93,7 @@ public class UserController {
     @ApiResponse(responseCode = "204", description = "User deleted successfully")
     @ApiResponse(responseCode = "400", description = "User not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable UUID id) {
         userService.delete(id);
     }
 }

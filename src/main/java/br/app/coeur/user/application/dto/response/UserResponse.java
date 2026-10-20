@@ -2,8 +2,10 @@ package br.app.coeur.user.application.dto.response;
 
 import br.app.coeur.user.domain.User;
 
+import java.util.UUID;
+
 public record UserResponse(
-        Long id,
+        UUID id,
         String email,
         String name,
         String roles) {

@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @AllArgsConstructor()
 public class UserService {
@@ -40,7 +42,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse findById(Long id) {
+    public UserResponse findById(UUID id) {
         return UserResponse.from(getUser(id));
     }
 
@@ -50,7 +52,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse update(Long id, UpdateUserRequest request) {
+    public UserResponse update(UUID id, UpdateUserRequest request) {
         User user = getUser(id);
 
         if (!request.email().equals(user.getEmail())) {
@@ -67,13 +69,13 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         userRepository.delete(
                 getUser(id)
         );
     }
 
-    private User getUser(Long id) {
+    private User getUser(UUID id) {
         return userRepository.findById(id).orElseThrow(UserNotFoundException::new);
     }
 }

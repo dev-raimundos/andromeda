@@ -3,22 +3,25 @@ package br.app.coeur.user.domain;
 import br.app.coeur.shared.persistence.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
 @Getter
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity<Long> {
+public class User extends BaseEntity<UUID> {
 
     public static final String DEFAULT_ROLE = "ROLE_USER";
     public static final int MAX_FAILED_ATTEMPTS = 5;
     private static final Duration LOCK_DURATION = Duration.ofMinutes(15);
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    @UuidGenerator
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String email;
