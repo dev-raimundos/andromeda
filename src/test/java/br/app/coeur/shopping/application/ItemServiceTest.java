@@ -20,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,6 +32,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ItemServiceTest {
 
+    private static final UUID ITEM_ID = UUID.randomUUID();
+    private static final UUID NON_EXISTENT_ID = UUID.randomUUID();
+
     @Mock
     private ItemRepository itemRepository;
 
@@ -39,7 +43,7 @@ class ItemServiceTest {
 
     private Item existingItem() {
         Item item = Item.create("Rice", "White rice, type 1", 20.0, null, "Ben's");
-        ReflectionTestUtils.setField(item, "id", 1L);
+        ReflectionTestUtils.setField(item, "id", ITEM_ID);
         return item;
     }
 
@@ -60,19 +64,19 @@ class ItemServiceTest {
 
     @Test
     void findByIdShouldReturnItem() {
-        when(itemRepository.findById(1L)).thenReturn(Optional.of(existingItem()));
+        when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(existingItem()));
 
-        ItemResponse response = itemService.findById(1L);
+        ItemResponse response = itemService.findById(ITEM_ID);
 
-        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.id()).isEqualTo(ITEM_ID);
         assertThat(response.name()).isEqualTo("Rice");
     }
 
     @Test
     void findByIdShouldFailWhenItemDoesNotExist() {
-        when(itemRepository.findById(99L)).thenReturn(Optional.empty());
+        when(itemRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> itemService.findById(99L))
+        assertThatThrownBy(() -> itemService.findById(NON_EXISTENT_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Item not found.");
     }
@@ -90,10 +94,10 @@ class ItemServiceTest {
     @Test
     void updateShouldChangeAllFields() {
         Item item = existingItem();
-        when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(item));
 
         ItemResponse response = itemService.update(
-                1L, new UpdateItemRequest("Beans", "Carioca beans", 15.0, "https://store.com/beans", "Acme")
+                ITEM_ID, new UpdateItemRequest("Beans", "Carioca beans", 15.0, "https://store.com/beans", "Acme")
         );
 
         assertThat(response.name()).isEqualTo("Beans");
@@ -104,9 +108,9 @@ class ItemServiceTest {
 
     @Test
     void updateShouldFailWhenItemDoesNotExist() {
-        when(itemRepository.findById(99L)).thenReturn(Optional.empty());
+        when(itemRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> itemService.update(99L, new UpdateItemRequest("a", "b", 1.0, null, "c")))
+        assertThatThrownBy(() -> itemService.update(NON_EXISTENT_ID, new UpdateItemRequest("a", "b", 1.0, null, "c")))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Item not found.");
     }
@@ -114,18 +118,18 @@ class ItemServiceTest {
     @Test
     void deleteShouldRemoveExistingItem() {
         Item item = existingItem();
-        when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(item));
 
-        itemService.delete(1L);
+        itemService.delete(ITEM_ID);
 
         verify(itemRepository).delete(item);
     }
 
     @Test
     void deleteShouldFailWhenItemDoesNotExist() {
-        when(itemRepository.findById(99L)).thenReturn(Optional.empty());
+        when(itemRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> itemService.delete(99L))
+        assertThatThrownBy(() -> itemService.delete(NON_EXISTENT_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Item not found.");
 

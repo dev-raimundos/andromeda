@@ -21,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,6 +32,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
+
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID NON_EXISTENT_ID = UUID.randomUUID();
 
     @Mock
     private UserRepository userRepository;
@@ -43,7 +47,7 @@ class UserServiceTest {
 
     private User existingUser() {
         User user = User.register("john@coeur.app", "encoded", "John");
-        ReflectionTestUtils.setField(user, "id", 1L);
+        ReflectionTestUtils.setField(user, "id", USER_ID);
         return user;
     }
 
@@ -76,19 +80,19 @@ class UserServiceTest {
 
     @Test
     void findByIdShouldReturnUser() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser()));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser()));
 
-        UserResponse response = userService.findById(1L);
+        UserResponse response = userService.findById(USER_ID);
 
-        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.id()).isEqualTo(USER_ID);
         assertThat(response.email()).isEqualTo("john@coeur.app");
     }
 
     @Test
     void findByIdShouldFailWhenUserDoesNotExist() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.findById(99L))
+        assertThatThrownBy(() -> userService.findById(NON_EXISTENT_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User not found.");
     }
@@ -108,10 +112,10 @@ class UserServiceTest {
     @Test
     void updateShouldChangeEmailNameAndRoles() {
         User user = existingUser();
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.existsByEmail("new@coeur.app")).thenReturn(false);
 
-        UserResponse response = userService.update(1L, new UpdateUserRequest("new@coeur.app", "New Name", "ROLE_ADMIN"));
+        UserResponse response = userService.update(USER_ID, new UpdateUserRequest("new@coeur.app", "New Name", "ROLE_ADMIN"));
 
         assertThat(response.email()).isEqualTo("new@coeur.app");
         assertThat(response.name()).isEqualTo("New Name");
@@ -121,9 +125,9 @@ class UserServiceTest {
 
     @Test
     void updateShouldNotCheckEmailUniquenessWhenEmailIsUnchanged() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser()));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(existingUser()));
 
-        UserResponse response = userService.update(1L, new UpdateUserRequest("john@coeur.app", "John Updated", User.DEFAULT_ROLE));
+        UserResponse response = userService.update(USER_ID, new UpdateUserRequest("john@coeur.app", "John Updated", User.DEFAULT_ROLE));
 
         verify(userRepository, never()).existsByEmail(any());
         assertThat(response.name()).isEqualTo("John Updated");
@@ -132,10 +136,10 @@ class UserServiceTest {
     @Test
     void updateShouldFailWhenNewEmailIsAlreadyInUse() {
         User user = existingUser();
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.existsByEmail("taken@coeur.app")).thenReturn(true);
 
-        assertThatThrownBy(() -> userService.update(1L, new UpdateUserRequest("taken@coeur.app", "John", User.DEFAULT_ROLE)))
+        assertThatThrownBy(() -> userService.update(USER_ID, new UpdateUserRequest("taken@coeur.app", "John", User.DEFAULT_ROLE)))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("Email is already in use.");
 
@@ -144,9 +148,9 @@ class UserServiceTest {
 
     @Test
     void updateShouldFailWhenUserDoesNotExist() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.update(99L, new UpdateUserRequest("a@b.c", "John", User.DEFAULT_ROLE)))
+        assertThatThrownBy(() -> userService.update(NON_EXISTENT_ID, new UpdateUserRequest("a@b.c", "John", User.DEFAULT_ROLE)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User not found.");
     }
@@ -154,18 +158,18 @@ class UserServiceTest {
     @Test
     void deleteShouldRemoveExistingUser() {
         User user = existingUser();
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
 
-        userService.delete(1L);
+        userService.delete(USER_ID);
 
         verify(userRepository).delete(user);
     }
 
     @Test
     void deleteShouldFailWhenUserDoesNotExist() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.delete(99L))
+        assertThatThrownBy(() -> userService.delete(NON_EXISTENT_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User not found.");
 

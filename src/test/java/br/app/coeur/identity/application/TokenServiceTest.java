@@ -33,8 +33,9 @@ class TokenServiceTest {
     @Test
     void generateAccessTokenShouldEncodeUserClaims() {
         User user = User.register("john@coeur.app", "encoded", "John");
-        ReflectionTestUtils.setField(user, "id", 42L);
-        Jwt jwt = Jwt.withTokenValue("signed-jwt").header("alg", "RS256").subject("42").build();
+        UUID userId = UUID.randomUUID();
+        ReflectionTestUtils.setField(user, "id", userId);
+        Jwt jwt = Jwt.withTokenValue("signed-jwt").header("alg", "RS256").subject(userId.toString()).build();
         when(jwtEncoder.encode(any(JwtEncoderParameters.class))).thenReturn(jwt);
 
         String token = tokenService.generateAccessToken(user);
@@ -44,7 +45,7 @@ class TokenServiceTest {
         ArgumentCaptor<JwtEncoderParameters> captor = ArgumentCaptor.forClass(JwtEncoderParameters.class);
         verify(jwtEncoder).encode(captor.capture());
         JwtClaimsSet claims = captor.getValue().getClaims();
-        assertThat(claims.getSubject()).isEqualTo("42");
+        assertThat(claims.getSubject()).isEqualTo(userId.toString());
         assertThat(claims.<String>getClaim("iss")).isEqualTo("coeur-api");
         assertThat(claims.<String>getClaim("email")).isEqualTo("john@coeur.app");
         assertThat(claims.<String>getClaim("name")).isEqualTo("John");

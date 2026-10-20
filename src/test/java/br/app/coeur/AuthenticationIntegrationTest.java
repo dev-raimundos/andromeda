@@ -166,7 +166,7 @@ class AuthenticationIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        long newUserId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
+        String newUserId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
 
         // 3. Fetch user by ID
         mockMvc.perform(get("/api/users/" + newUserId)
@@ -242,10 +242,10 @@ class AuthenticationIntegrationTest {
                 .andReturn();
 
         String token = objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("accessToken").asText();
-        long userId = objectMapper.readTree(
+        String userId = objectMapper.readTree(
                 mockMvc.perform(get("/api/users/me").header("Authorization", "Bearer " + token))
                         .andReturn().getResponse().getContentAsString()
-        ).get("id").asLong();
+        ).get("id").asText();
 
         mockMvc.perform(put("/api/users/" + userId)
                         .header("Authorization", "Bearer " + token)

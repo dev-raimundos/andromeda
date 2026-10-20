@@ -23,6 +23,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,6 +32,10 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ShoppingListServiceTest {
+
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID SHOPPING_LIST_ID = UUID.randomUUID();
+    private static final UUID ITEM_ID = UUID.randomUUID();
 
     @Mock
     private ShoppingListRepository shoppingListRepository;
@@ -42,14 +47,14 @@ class ShoppingListServiceTest {
     private ShoppingListService shoppingListService;
 
     private ShoppingList existingShoppingList() {
-        ShoppingList shoppingList = ShoppingList.create("Groceries", 1L);
-        ReflectionTestUtils.setField(shoppingList, "id", 10L);
+        ShoppingList shoppingList = ShoppingList.create("Groceries", USER_ID);
+        ReflectionTestUtils.setField(shoppingList, "id", SHOPPING_LIST_ID);
         return shoppingList;
     }
 
     private Item existingItem() {
         Item item = Item.create("Rice", "White rice, type 1", 20.0, null, "Ben's");
-        ReflectionTestUtils.setField(item, "id", 100L);
+        ReflectionTestUtils.setField(item, "id", ITEM_ID);
         return item;
     }
 
@@ -57,28 +62,28 @@ class ShoppingListServiceTest {
     void createShouldPersistShoppingListForUser() {
         when(shoppingListRepository.save(any(ShoppingList.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ShoppingListResponse response = shoppingListService.create(1L, new CreateShoppingListRequest("Groceries"));
+        ShoppingListResponse response = shoppingListService.create(USER_ID, new CreateShoppingListRequest("Groceries"));
 
         assertThat(response.name()).isEqualTo("Groceries");
-        assertThat(response.userId()).isEqualTo(1L);
+        assertThat(response.userId()).isEqualTo(USER_ID);
         assertThat(response.items()).isEmpty();
     }
 
     @Test
     void findByIdShouldReturnShoppingListOwnedByUser() {
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(existingShoppingList()));
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(existingShoppingList()));
 
-        ShoppingListResponse response = shoppingListService.findById(1L, 10L);
+        ShoppingListResponse response = shoppingListService.findById(USER_ID, SHOPPING_LIST_ID);
 
-        assertThat(response.id()).isEqualTo(10L);
+        assertThat(response.id()).isEqualTo(SHOPPING_LIST_ID);
         assertThat(response.name()).isEqualTo("Groceries");
     }
 
     @Test
     void findByIdShouldFailWhenShoppingListDoesNotExistOrBelongsToAnotherUser() {
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.empty());
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> shoppingListService.findById(1L, 10L))
+        assertThatThrownBy(() -> shoppingListService.findById(USER_ID, SHOPPING_LIST_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Shopping list not found.");
     }
@@ -86,18 +91,18 @@ class ShoppingListServiceTest {
     @Test
     void findAllShouldMapAllShoppingListsOfUser() {
         Pageable pageable = PageRequest.of(0, 20);
-        when(shoppingListRepository.findAllByUserId(1L, pageable)).thenReturn(new PageImpl<>(List.of(existingShoppingList())));
+        when(shoppingListRepository.findAllByUserId(USER_ID, pageable)).thenReturn(new PageImpl<>(List.of(existingShoppingList())));
 
-        Page<ShoppingListResponse> responses = shoppingListService.findAll(1L, pageable);
+        Page<ShoppingListResponse> responses = shoppingListService.findAll(USER_ID, pageable);
 
         assertThat(responses.getContent()).extracting(ShoppingListResponse::name).containsExactly("Groceries");
     }
 
     @Test
     void renameShouldUpdateShoppingListName() {
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(existingShoppingList()));
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(existingShoppingList()));
 
-        ShoppingListResponse response = shoppingListService.rename(1L, 10L, new UpdateShoppingListRequest("Market"));
+        ShoppingListResponse response = shoppingListService.rename(USER_ID, SHOPPING_LIST_ID, new UpdateShoppingListRequest("Market"));
 
         assertThat(response.name()).isEqualTo("Market");
     }
@@ -105,31 +110,31 @@ class ShoppingListServiceTest {
     @Test
     void deleteShouldRemoveExistingShoppingList() {
         ShoppingList shoppingList = existingShoppingList();
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(shoppingList));
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(shoppingList));
 
-        shoppingListService.delete(1L, 10L);
+        shoppingListService.delete(USER_ID, SHOPPING_LIST_ID);
 
         org.mockito.Mockito.verify(shoppingListRepository).delete(shoppingList);
     }
 
     @Test
     void addItemShouldAppendItemWithQuantity() {
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(existingShoppingList()));
-        when(itemRepository.findById(100L)).thenReturn(Optional.of(existingItem()));
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(existingShoppingList()));
+        when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(existingItem()));
 
-        ShoppingListResponse response = shoppingListService.addItem(1L, 10L, new AddItemToShoppingListRequest(100L, 2));
+        ShoppingListResponse response = shoppingListService.addItem(USER_ID, SHOPPING_LIST_ID, new AddItemToShoppingListRequest(ITEM_ID, 2));
 
         assertThat(response.items()).hasSize(1);
         assertThat(response.items().getFirst().quantity()).isEqualTo(2);
-        assertThat(response.items().getFirst().item().id()).isEqualTo(100L);
+        assertThat(response.items().getFirst().item().id()).isEqualTo(ITEM_ID);
     }
 
     @Test
     void addItemShouldFailWhenItemDoesNotExist() {
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(existingShoppingList()));
-        when(itemRepository.findById(100L)).thenReturn(Optional.empty());
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(existingShoppingList()));
+        when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> shoppingListService.addItem(1L, 10L, new AddItemToShoppingListRequest(100L, 2)))
+        assertThatThrownBy(() -> shoppingListService.addItem(USER_ID, SHOPPING_LIST_ID, new AddItemToShoppingListRequest(ITEM_ID, 2)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Item not found.");
     }
@@ -140,10 +145,10 @@ class ShoppingListServiceTest {
         Item item = existingItem();
         shoppingList.addItem(item, 2);
 
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(shoppingList));
-        when(itemRepository.findById(100L)).thenReturn(Optional.of(item));
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(shoppingList));
+        when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(item));
 
-        ShoppingListResponse response = shoppingListService.removeItem(1L, 10L, 100L);
+        ShoppingListResponse response = shoppingListService.removeItem(USER_ID, SHOPPING_LIST_ID, ITEM_ID);
 
         assertThat(response.items()).isEmpty();
     }
@@ -154,10 +159,10 @@ class ShoppingListServiceTest {
         Item item = existingItem();
         shoppingList.addItem(item, 2);
 
-        when(shoppingListRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(shoppingList));
-        when(itemRepository.findById(100L)).thenReturn(Optional.of(item));
+        when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(shoppingList));
+        when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.of(item));
 
-        ShoppingListResponse response = shoppingListService.changeItemQuantity(1L, 10L, 100L, new UpdateItemQuantityRequest(7));
+        ShoppingListResponse response = shoppingListService.changeItemQuantity(USER_ID, SHOPPING_LIST_ID, ITEM_ID, new UpdateItemQuantityRequest(7));
 
         assertThat(response.items().getFirst().quantity()).isEqualTo(7);
     }

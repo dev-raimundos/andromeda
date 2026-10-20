@@ -2,6 +2,8 @@ package br.app.coeur.shopping.domain;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -12,7 +14,7 @@ class ShoppingListItemTest {
     }
 
     private ShoppingList newShoppingList() {
-        return ShoppingList.create("Groceries", 1L);
+        return ShoppingList.create("Groceries", UUID.randomUUID());
     }
 
     private ShoppingListItem newShoppingListItem(int quantity) {

@@ -3,13 +3,17 @@ package br.app.coeur.shopping.domain;
 import br.app.coeur.shopping.domain.exception.ItemNotInShoppingListException;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ShoppingListTest {
 
+    private static final UUID USER_ID = UUID.randomUUID();
+
     private ShoppingList newShoppingList() {
-        return ShoppingList.create("Groceries", 1L);
+        return ShoppingList.create("Groceries", USER_ID);
     }
 
     private Item newItem() {
@@ -21,13 +25,13 @@ class ShoppingListTest {
         ShoppingList shoppingList = newShoppingList();
 
         assertThat(shoppingList.getName()).isEqualTo("Groceries");
-        assertThat(shoppingList.getUserId()).isEqualTo(1L);
+        assertThat(shoppingList.getUserId()).isEqualTo(USER_ID);
         assertThat(shoppingList.getItems()).isEmpty();
     }
 
     @Test
     void createShouldRejectBlankNameOrNullUserId() {
-        assertThatThrownBy(() -> ShoppingList.create(" ", 1L))
+        assertThatThrownBy(() -> ShoppingList.create(" ", USER_ID))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("Name is required.");
         assertThatThrownBy(() -> ShoppingList.create("Groceries", null))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("User is required.");
