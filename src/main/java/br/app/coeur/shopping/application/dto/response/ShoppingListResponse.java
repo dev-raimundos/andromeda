@@ -3,11 +3,12 @@ package br.app.coeur.shopping.application.dto.response;
 import br.app.coeur.shopping.domain.ShoppingList;
 
 import java.util.List;
+import java.util.UUID;
 
 public record ShoppingListResponse(
-        Long id,
+        UUID id,
         String name,
-        Long userId,
+        UUID userId,
         List<ItemListResponse> items) {
 
     public static ShoppingListResponse from(ShoppingList shoppingList) {

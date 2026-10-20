@@ -2,8 +2,10 @@ package br.app.coeur.shopping.application.dto.response;
 
 import br.app.coeur.shopping.domain.ShoppingListItem;
 
+import java.util.UUID;
+
 public record ItemListResponse(
-        Long id,
+        UUID id,
         ItemResponse item,
         int quantity,
         boolean purchased) {

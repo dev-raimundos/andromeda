@@ -18,6 +18,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/shopping-lists")
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "201", description = "List created successfully")
     @ApiResponse(responseCode = "400", description = "Invalid payload")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public ShoppingListResponse create(@CurrentUserId Long userId,
+    public ShoppingListResponse create(@CurrentUserId UUID userId,
                                        @Valid @RequestBody CreateShoppingListRequest request) {
         return shoppingListService.create(userId, request);
     }
@@ -47,7 +49,7 @@ public class ShoppingListController {
     )
     @ApiResponse(responseCode = "200", description = "Page returned successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public Page<ShoppingListResponse> listAll(@CurrentUserId Long userId,
+    public Page<ShoppingListResponse> listAll(@CurrentUserId UUID userId,
                                               @PageableDefault(size = 20) Pageable pageable) {
         return shoppingListService.findAll(userId, pageable);
     }
@@ -60,8 +62,8 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "200", description = "List found successfully")
     @ApiResponse(responseCode = "404", description = "List not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public ShoppingListResponse getById(@CurrentUserId Long userId,
-                                        @PathVariable Long id) {
+    public ShoppingListResponse getById(@CurrentUserId UUID userId,
+                                        @PathVariable UUID id) {
         return shoppingListService.findById(userId, id);
     }
 
@@ -74,8 +76,8 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "400", description = "Invalid payload")
     @ApiResponse(responseCode = "404", description = "List not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public ShoppingListResponse rename(@CurrentUserId Long userId,
-                                       @PathVariable Long id,
+    public ShoppingListResponse rename(@CurrentUserId UUID userId,
+                                       @PathVariable UUID id,
                                        @Valid @RequestBody UpdateShoppingListRequest request) {
         return shoppingListService.rename(userId, id, request);
     }
@@ -89,8 +91,8 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "204", description = "List deleted successfully")
     @ApiResponse(responseCode = "404", description = "List not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public void delete(@CurrentUserId Long userId,
-                       @PathVariable Long id) {
+    public void delete(@CurrentUserId UUID userId,
+                       @PathVariable UUID id) {
         shoppingListService.delete(userId, id);
     }
 
@@ -104,8 +106,8 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "400", description = "Invalid payload")
     @ApiResponse(responseCode = "404", description = "List or item not found")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public ShoppingListResponse addItem(@CurrentUserId Long userId,
-                                        @PathVariable Long id,
+    public ShoppingListResponse addItem(@CurrentUserId UUID userId,
+                                        @PathVariable UUID id,
                                         @Valid @RequestBody AddItemToShoppingListRequest request) {
         return shoppingListService.addItem(userId, id, request);
     }
@@ -119,9 +121,9 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "400", description = "Invalid payload")
     @ApiResponse(responseCode = "404", description = "List not found or item is not part of the list")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public ShoppingListResponse changeItemQuantity(@CurrentUserId Long userId,
-                                                   @PathVariable Long id,
-                                                   @PathVariable Long itemId,
+    public ShoppingListResponse changeItemQuantity(@CurrentUserId UUID userId,
+                                                   @PathVariable UUID id,
+                                                   @PathVariable UUID itemId,
                                                    @Valid @RequestBody UpdateItemQuantityRequest request) {
         return shoppingListService.changeItemQuantity(userId, id, itemId, request);
     }
@@ -134,9 +136,9 @@ public class ShoppingListController {
     @ApiResponse(responseCode = "200", description = "Item removed successfully")
     @ApiResponse(responseCode = "404", description = "List not found or item is not part of the list")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
-    public ShoppingListResponse removeItem(@CurrentUserId Long userId,
-                                           @PathVariable Long id,
-                                           @PathVariable Long itemId) {
+    public ShoppingListResponse removeItem(@CurrentUserId UUID userId,
+                                           @PathVariable UUID id,
+                                           @PathVariable UUID itemId) {
         return shoppingListService.removeItem(userId, id, itemId);
     }
 }

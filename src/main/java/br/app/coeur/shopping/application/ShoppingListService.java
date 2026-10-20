@@ -19,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class ShoppingListService {
@@ -27,7 +29,7 @@ public class ShoppingListService {
     private final ItemRepository itemRepository;
 
     @Transactional
-    public ShoppingListResponse create(Long userId, CreateShoppingListRequest request) {
+    public ShoppingListResponse create(UUID userId, CreateShoppingListRequest request) {
         ShoppingList shoppingList = ShoppingList.create(request.name(), userId);
 
         return ShoppingListResponse.from(
@@ -37,19 +39,19 @@ public class ShoppingListService {
 
     @Cacheable(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional(readOnly = true)
-    public ShoppingListResponse findById(Long userId, Long id) {
+    public ShoppingListResponse findById(UUID userId, UUID id) {
         return ShoppingListResponse.from(getShoppingList(userId, id));
     }
 
     @Transactional(readOnly = true)
-    public Page<ShoppingListResponse> findAll(Long userId, Pageable pageable) {
+    public Page<ShoppingListResponse> findAll(UUID userId, Pageable pageable) {
         return shoppingListRepository.findAllByUserId(userId, pageable)
                 .map(ShoppingListResponse::from);
     }
 
     @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
-    public ShoppingListResponse rename(Long userId, Long id, UpdateShoppingListRequest request) {
+    public ShoppingListResponse rename(UUID userId, UUID id, UpdateShoppingListRequest request) {
         ShoppingList shoppingList = getShoppingList(userId, id);
         shoppingList.rename(request.name());
         return ShoppingListResponse.from(shoppingList);
@@ -57,7 +59,7 @@ public class ShoppingListService {
 
     @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
-    public void delete(Long userId, Long id) {
+    public void delete(UUID userId, UUID id) {
         shoppingListRepository.delete(
                 getShoppingList(userId, id)
         );
@@ -65,7 +67,7 @@ public class ShoppingListService {
 
     @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
-    public ShoppingListResponse addItem(Long userId, Long id, AddItemToShoppingListRequest request) {
+    public ShoppingListResponse addItem(UUID userId, UUID id, AddItemToShoppingListRequest request) {
         ShoppingList shoppingList = getShoppingList(userId, id);
         Item item = getItem(request.itemId());
 
@@ -76,7 +78,7 @@ public class ShoppingListService {
 
     @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
-    public ShoppingListResponse removeItem(Long userId, Long id, Long itemId) {
+    public ShoppingListResponse removeItem(UUID userId, UUID id, UUID itemId) {
         ShoppingList shoppingList = getShoppingList(userId, id);
         Item item = getItem(itemId);
 
@@ -87,7 +89,7 @@ public class ShoppingListService {
 
     @CacheEvict(cacheNames = ShoppingCacheNames.SHOPPING_LISTS, key = "#userId + ':' + #id")
     @Transactional
-    public ShoppingListResponse changeItemQuantity(Long userId, Long id, Long itemId, UpdateItemQuantityRequest request) {
+    public ShoppingListResponse changeItemQuantity(UUID userId, UUID id, UUID itemId, UpdateItemQuantityRequest request) {
         ShoppingList shoppingList = getShoppingList(userId, id);
         Item item = getItem(itemId);
 
@@ -96,12 +98,12 @@ public class ShoppingListService {
         return ShoppingListResponse.from(shoppingList);
     }
 
-    private ShoppingList getShoppingList(Long userId, Long id) {
+    private ShoppingList getShoppingList(UUID userId, UUID id) {
         return shoppingListRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(ShoppingListNotFoundException::new);
     }
 
-    private Item getItem(Long id) {
+    private Item getItem(UUID id) {
         return itemRepository.findById(id)
                 .orElseThrow(ItemNotFoundException::new);
     }

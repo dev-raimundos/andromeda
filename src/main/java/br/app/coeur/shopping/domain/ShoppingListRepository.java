@@ -4,15 +4,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ShoppingListRepository {
     ShoppingList save(ShoppingList shoppingList);
 
-    Optional<ShoppingList> findById(Long id);
+    Optional<ShoppingList> findById(UUID id);
 
-    Page<ShoppingList> findAllByUserId(Long userId, Pageable pageable);
+    Page<ShoppingList> findAllByUserId(UUID userId, Pageable pageable);
 
-    Optional<ShoppingList> findByIdAndUserId(Long id, Long userId);
+    Optional<ShoppingList> findByIdAndUserId(UUID id, UUID userId);
 
     void delete(ShoppingList shoppingList);
 }

@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class ItemService {
@@ -35,7 +37,7 @@ public class ItemService {
     }
 
     @Transactional(readOnly = true)
-    public ItemResponse findById(Long id) {
+    public ItemResponse findById(UUID id) {
         return ItemResponse.from(getItem(id));
     }
 
@@ -45,7 +47,7 @@ public class ItemService {
     }
 
     @Transactional
-    public ItemResponse update(Long id, UpdateItemRequest request) {
+    public ItemResponse update(UUID id, UpdateItemRequest request) {
         Item item = getItem(id);
 
         item.rename(request.name());
@@ -58,13 +60,13 @@ public class ItemService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         itemRepository.delete(
                 getItem(id)
         );
     }
 
-    private Item getItem(Long id) {
+    private Item getItem(UUID id) {
         return itemRepository.findById(id).orElseThrow(ItemNotFoundException::new);
     }
 }

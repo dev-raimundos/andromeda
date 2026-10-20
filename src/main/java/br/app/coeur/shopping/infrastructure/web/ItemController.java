@@ -15,6 +15,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/items")
 @RequiredArgsConstructor
@@ -52,7 +54,7 @@ public class ItemController {
     )
     @ApiResponse(responseCode = "200", description = "Item found successfully")
     @ApiResponse(responseCode = "404", description = "Item not found")
-    public ItemResponse getById(@PathVariable Long id) {
+    public ItemResponse getById(@PathVariable UUID id) {
         return itemService.findById(id);
     }
 
@@ -64,7 +66,7 @@ public class ItemController {
     @ApiResponse(responseCode = "200", description = "Item updated successfully")
     @ApiResponse(responseCode = "400", description = "Invalid payload")
     @ApiResponse(responseCode = "404", description = "Item not found")
-    public ItemResponse update(@PathVariable Long id,
+    public ItemResponse update(@PathVariable UUID id,
                                @Valid @RequestBody UpdateItemRequest request) {
         return itemService.update(id, request);
     }
@@ -77,7 +79,7 @@ public class ItemController {
     )
     @ApiResponse(responseCode = "204", description = "Item deleted successfully")
     @ApiResponse(responseCode = "404", description = "Item not found")
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable UUID id) {
         itemService.delete(id);
     }
 }

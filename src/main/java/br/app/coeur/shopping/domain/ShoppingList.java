@@ -6,30 +6,32 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Getter
 @Entity
 @Table(name = "shopping_lists")
-public class ShoppingList extends BaseEntity<Long> {
+public class ShoppingList extends BaseEntity<UUID> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    @UuidGenerator
+    private UUID id;
 
     @Column(nullable = false)
     private String name;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @OneToMany(mappedBy = "shoppingList", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<ShoppingListItem> items = new ArrayList<>();
@@ -37,12 +39,12 @@ public class ShoppingList extends BaseEntity<Long> {
     protected ShoppingList() {
     }
 
-    private ShoppingList(String name, Long userId) {
+    private ShoppingList(String name, UUID userId) {
         this.name = requireText(name, "Name is required.");
         this.userId = requireNonNull(userId, "User is required.");
     }
 
-    public static ShoppingList create(String name, Long userId) {
+    public static ShoppingList create(String name, UUID userId) {
         return new ShoppingList(name, userId);
     }
 
@@ -87,7 +89,7 @@ public class ShoppingList extends BaseEntity<Long> {
         return value;
     }
 
-    private static Long requireNonNull(Long value, String message) {
+    private static UUID requireNonNull(UUID value, String message) {
         if (value == null) {
             throw new IllegalArgumentException(message);
         }
