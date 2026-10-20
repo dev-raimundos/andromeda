@@ -104,8 +104,9 @@ class AuthServiceTest {
     @Test
     void loginShouldFailForUnknownEmail() {
         when(userRepository.findByEmail("ghost@coeur.app")).thenReturn(Optional.empty());
+        LoginRequest request = new LoginRequest("ghost@coeur.app", "secret");
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("ghost@coeur.app", "secret")))
+        assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Invalid credentials.");
 
@@ -116,8 +117,9 @@ class AuthServiceTest {
     void loginShouldFailAndCountAttemptWhenPasswordIsWrong() {
         when(userRepository.findByEmail("john@coeur.app")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded")).thenReturn(false);
+        LoginRequest request = new LoginRequest("john@coeur.app", "wrong");
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("john@coeur.app", "wrong")))
+        assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Invalid credentials.");
 
@@ -132,8 +134,9 @@ class AuthServiceTest {
         }
         when(userRepository.findByEmail("john@coeur.app")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "encoded")).thenReturn(false);
+        LoginRequest request = new LoginRequest("john@coeur.app", "wrong");
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("john@coeur.app", "wrong")))
+        assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("locked");
 
@@ -145,8 +148,9 @@ class AuthServiceTest {
         user.registerFailedLogin(Instant.now().minus(Duration.ofMinutes(1)));
         ReflectionTestUtils.setField(user, "lockExpiredAt", Instant.now().plus(Duration.ofMinutes(10)));
         when(userRepository.findByEmail("john@coeur.app")).thenReturn(Optional.of(user));
+        LoginRequest request = new LoginRequest("john@coeur.app", "secret");
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("john@coeur.app", "secret")))
+        assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("locked");
 
@@ -179,8 +183,9 @@ class AuthServiceTest {
     @Test
     void refreshShouldFailWhenTokenDoesNotExist() {
         when(refreshTokenRepository.findByToken("unknown")).thenReturn(Optional.empty());
+        RefreshTokenRequest request = new RefreshTokenRequest("unknown");
 
-        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("unknown")))
+        assertThatThrownBy(() -> authService.refresh(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Refresh token is invalid, revoked, or expired.");
     }
@@ -190,8 +195,9 @@ class AuthServiceTest {
         RefreshToken revoked = RefreshToken.issue("revoked-token", USER_ID, Instant.now(), Duration.ofDays(7));
         revoked.revoke();
         when(refreshTokenRepository.findByToken("revoked-token")).thenReturn(Optional.of(revoked));
+        RefreshTokenRequest request = new RefreshTokenRequest("revoked-token");
 
-        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("revoked-token")))
+        assertThatThrownBy(() -> authService.refresh(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Refresh token is invalid, revoked, or expired.");
 
@@ -202,8 +208,9 @@ class AuthServiceTest {
     void refreshShouldFailWhenTokenIsExpired() {
         RefreshToken expired = RefreshToken.issue("expired-token", USER_ID, Instant.now().minus(Duration.ofDays(10)), Duration.ofDays(7));
         when(refreshTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(expired));
+        RefreshTokenRequest request = new RefreshTokenRequest("expired-token");
 
-        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("expired-token")))
+        assertThatThrownBy(() -> authService.refresh(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("Refresh token is invalid, revoked, or expired.");
 
@@ -215,8 +222,9 @@ class AuthServiceTest {
         RefreshToken token = RefreshToken.issue("orphan-token", USER_ID, Instant.now(), Duration.ofDays(7));
         when(refreshTokenRepository.findByToken("orphan-token")).thenReturn(Optional.of(token));
         when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+        RefreshTokenRequest request = new RefreshTokenRequest("orphan-token");
 
-        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("orphan-token")))
+        assertThatThrownBy(() -> authService.refresh(request))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User not found.");
 

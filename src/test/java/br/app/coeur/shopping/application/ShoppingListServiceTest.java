@@ -28,6 +28,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -114,7 +115,7 @@ class ShoppingListServiceTest {
 
         shoppingListService.delete(USER_ID, SHOPPING_LIST_ID);
 
-        org.mockito.Mockito.verify(shoppingListRepository).delete(shoppingList);
+        verify(shoppingListRepository).delete(shoppingList);
     }
 
     @Test
@@ -133,8 +134,9 @@ class ShoppingListServiceTest {
     void addItemShouldFailWhenItemDoesNotExist() {
         when(shoppingListRepository.findByIdAndUserId(SHOPPING_LIST_ID, USER_ID)).thenReturn(Optional.of(existingShoppingList()));
         when(itemRepository.findById(ITEM_ID)).thenReturn(Optional.empty());
+        AddItemToShoppingListRequest request = new AddItemToShoppingListRequest(ITEM_ID, 2);
 
-        assertThatThrownBy(() -> shoppingListService.addItem(USER_ID, SHOPPING_LIST_ID, new AddItemToShoppingListRequest(ITEM_ID, 2)))
+        assertThatThrownBy(() -> shoppingListService.addItem(USER_ID, SHOPPING_LIST_ID, request))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Item not found.");
     }

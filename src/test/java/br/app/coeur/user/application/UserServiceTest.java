@@ -70,8 +70,9 @@ class UserServiceTest {
     @Test
     void registerShouldFailWhenEmailAlreadyInUse() {
         when(userRepository.existsByEmail("john@coeur.app")).thenReturn(true);
+        RegisterUserRequest request = new RegisterUserRequest("john@coeur.app", "secret", "John");
 
-        assertThatThrownBy(() -> userService.register(new RegisterUserRequest("john@coeur.app", "secret", "John")))
+        assertThatThrownBy(() -> userService.register(request))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("Email is already in use.");
 
@@ -138,8 +139,9 @@ class UserServiceTest {
         User user = existingUser();
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.existsByEmail("taken@coeur.app")).thenReturn(true);
+        UpdateUserRequest request = new UpdateUserRequest("taken@coeur.app", "John", User.DEFAULT_ROLE);
 
-        assertThatThrownBy(() -> userService.update(USER_ID, new UpdateUserRequest("taken@coeur.app", "John", User.DEFAULT_ROLE)))
+        assertThatThrownBy(() -> userService.update(USER_ID, request))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("Email is already in use.");
 
@@ -149,8 +151,9 @@ class UserServiceTest {
     @Test
     void updateShouldFailWhenUserDoesNotExist() {
         when(userRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
+        UpdateUserRequest request = new UpdateUserRequest("a@b.c", "John", User.DEFAULT_ROLE);
 
-        assertThatThrownBy(() -> userService.update(NON_EXISTENT_ID, new UpdateUserRequest("a@b.c", "John", User.DEFAULT_ROLE)))
+        assertThatThrownBy(() -> userService.update(NON_EXISTENT_ID, request))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("User not found.");
     }

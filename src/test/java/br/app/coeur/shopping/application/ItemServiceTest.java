@@ -109,8 +109,9 @@ class ItemServiceTest {
     @Test
     void updateShouldFailWhenItemDoesNotExist() {
         when(itemRepository.findById(NON_EXISTENT_ID)).thenReturn(Optional.empty());
+        UpdateItemRequest request = new UpdateItemRequest("a", "b", 1.0, null, "c");
 
-        assertThatThrownBy(() -> itemService.update(NON_EXISTENT_ID, new UpdateItemRequest("a", "b", 1.0, null, "c")))
+        assertThatThrownBy(() -> itemService.update(NON_EXISTENT_ID, request))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Item not found.");
     }

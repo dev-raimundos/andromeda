@@ -87,8 +87,9 @@ class ShoppingListTest {
     @Test
     void removeItemShouldFailWhenItemIsNotInList() {
         ShoppingList shoppingList = newShoppingList();
+        Item item = newItem();
 
-        assertThatThrownBy(() -> shoppingList.removeItem(newItem()))
+        assertThatThrownBy(() -> shoppingList.removeItem(item))
                 .isInstanceOf(ItemNotInShoppingListException.class)
                 .hasMessage("Item not found in the shopping list.");
     }
@@ -107,8 +108,9 @@ class ShoppingListTest {
     @Test
     void changeItemQuantityShouldFailWhenItemIsNotInList() {
         ShoppingList shoppingList = newShoppingList();
+        Item item = newItem();
 
-        assertThatThrownBy(() -> shoppingList.changeItemQuantity(newItem(), 5))
+        assertThatThrownBy(() -> shoppingList.changeItemQuantity(item, 5))
                 .isInstanceOf(ItemNotInShoppingListException.class)
                 .hasMessage("Item not found in the shopping list.");
     }
