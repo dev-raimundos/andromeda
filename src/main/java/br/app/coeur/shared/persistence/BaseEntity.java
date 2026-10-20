@@ -16,7 +16,7 @@ import java.util.Objects;
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity<EntityId extends Serializable> {
+public abstract class BaseEntity<I extends Serializable> {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -26,7 +26,7 @@ public abstract class BaseEntity<EntityId extends Serializable> {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public abstract EntityId getId();
+    public abstract I getId();
 
     @Override
     public final boolean equals(Object object) {
