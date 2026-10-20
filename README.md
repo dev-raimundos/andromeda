@@ -33,7 +33,7 @@ src/main/java/br/app/coeur/
 │   └── health/           # Simple health check endpoint
 ├── shared/               # OPEN module: shared kernel
 │   ├── exception/        # BusinessException, ConflictException, ResourceNotFoundException
-│   ├── persistence/      # BaseEntity (safe equals/hashCode for Hibernate proxies)
+│   ├── persistence/      # BaseEntity (safe equals/hashCode for Hibernate proxies, auditable created_at/updated_at)
 │   ├── security/         # @CurrentUserId and its argument resolver
 │   └── util/             # JwtUtils
 ├── identity/             # Login, refresh tokens, JWT/security configuration
@@ -164,8 +164,7 @@ into a JRE runtime image.
 Migrations managed by Flyway under `src/main/resources/db/migration`:
 
 - `V1__create_tables.sql`
-- `V2__add_user_lock_fields.sql`
-- `V3__create_shopping_tables.sql`
+- `V2__create_shopping_tables.sql`
 
 Hibernate's `ddl-auto` is fixed to `none` — any schema change must go through a new Flyway
 migration.
