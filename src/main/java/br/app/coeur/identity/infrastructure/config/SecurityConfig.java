@@ -33,6 +33,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
+                // Safe to disable: this API is a stateless OAuth2/JWT resource server (no session cookies),
+                // so there is no session-riding attack for CSRF protection to defend against.
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
