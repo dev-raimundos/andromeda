@@ -35,7 +35,7 @@ class AuthenticationIntegrationTest {
         // 1. Register a user
         RegisterUserRequest registerRequest = new RegisterUserRequest("test@coeur.app", "secret123", "John Doe");
 
-        mockMvc.perform(post("/api/users/register")
+        mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated())
@@ -44,14 +44,14 @@ class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.name", is("John Doe")))
                 .andExpect(jsonPath("$.roles", is("ROLE_USER")));
 
-        // 2. Try to access /api/users/me without a token (should return 401 Unauthorized)
-        mockMvc.perform(get("/api/users/me"))
+        // 2. Try to access /api/v1/users/me without a token (should return 401 Unauthorized)
+        mockMvc.perform(get("/api/v1/users/me"))
                 .andExpect(status().isUnauthorized());
 
         // 3. Log in and obtain the token pair
         LoginRequest loginRequest = new LoginRequest("test@coeur.app", "secret123");
 
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
@@ -65,8 +65,8 @@ class AuthenticationIntegrationTest {
         String accessToken = objectMapper.readTree(responseContent).get("accessToken").asText();
         String refreshToken = objectMapper.readTree(responseContent).get("refreshToken").asText();
 
-        // 4. Access /api/users/me using the access token (should return the user's data)
-        mockMvc.perform(get("/api/users/me")
+        // 4. Access /api/v1/users/me using the access token (should return the user's data)
+        mockMvc.perform(get("/api/v1/users/me")
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("test@coeur.app")))
@@ -75,7 +75,7 @@ class AuthenticationIntegrationTest {
         // 5. Use the refresh token to obtain new tokens
         RefreshTokenRequest refreshRequest = new RefreshTokenRequest(refreshToken);
 
-        MvcResult refreshResult = mockMvc.perform(post("/api/auth/refresh")
+        MvcResult refreshResult = mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreshRequest)))
                 .andExpect(status().isOk())
@@ -88,13 +88,13 @@ class AuthenticationIntegrationTest {
         String newAccessToken = objectMapper.readTree(newResponseContent).get("accessToken").asText();
 
         // 6. Try to use the old refresh token again (should fail due to rotation/revocation)
-        mockMvc.perform(post("/api/auth/refresh")
+        mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(refreshRequest)))
                 .andExpect(status().isBadRequest());
 
         // 7. Use the new access token to call the protected endpoint
-        mockMvc.perform(get("/api/users/me")
+        mockMvc.perform(get("/api/v1/users/me")
                         .header("Authorization", "Bearer " + newAccessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("test@coeur.app")));
@@ -105,7 +105,7 @@ class AuthenticationIntegrationTest {
         // 1. Register user
         RegisterUserRequest registerRequest = new RegisterUserRequest("lock@coeur.app", "secret123", "Locked User");
 
-        mockMvc.perform(post("/api/users/register")
+        mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated());
@@ -114,7 +114,7 @@ class AuthenticationIntegrationTest {
         LoginRequest wrongLoginRequest = new LoginRequest("lock@coeur.app", "wrongpassword");
 
         for (int i = 0; i < 4; i++) {
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(wrongLoginRequest)))
                     .andExpect(status().isBadRequest())
@@ -122,7 +122,7 @@ class AuthenticationIntegrationTest {
         }
 
         // 3. The 5th failed attempt should trigger the temporary lock
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(wrongLoginRequest)))
                 .andExpect(status().isBadRequest())
@@ -131,7 +131,7 @@ class AuthenticationIntegrationTest {
         // 4. Try to log in with the CORRECT password (should still be locked)
         LoginRequest correctLoginRequest = new LoginRequest("lock@coeur.app", "secret123");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(correctLoginRequest)))
                 .andExpect(status().isBadRequest())
@@ -143,12 +143,12 @@ class AuthenticationIntegrationTest {
         // 1. Register an admin and obtain a token to authorize the CRUD endpoints
         RegisterUserRequest adminRegister = new RegisterUserRequest("admin@coeur.app", "admin123", "Admin User");
 
-        mockMvc.perform(post("/api/users/register")
+        mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(adminRegister)))
                 .andExpect(status().isCreated());
 
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest("admin@coeur.app", "admin123"))))
                 .andExpect(status().isOk())
@@ -160,7 +160,7 @@ class AuthenticationIntegrationTest {
         // 2. Create a new user via the CRUD endpoint (registering another user)
         RegisterUserRequest userRequest = new RegisterUserRequest("crud@coeur.app", "crud123", "Crud User");
 
-        MvcResult createResult = mockMvc.perform(post("/api/users/register")
+        MvcResult createResult = mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isCreated())
@@ -169,14 +169,14 @@ class AuthenticationIntegrationTest {
         String newUserId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
 
         // 3. Fetch user by ID
-        mockMvc.perform(get("/api/users/" + newUserId)
+        mockMvc.perform(get("/api/v1/users/" + newUserId)
                         .header("Authorization", authHeader))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("crud@coeur.app")))
                 .andExpect(jsonPath("$.name", is("Crud User")));
 
         // 4. List all users (paginated)
-        mockMvc.perform(get("/api/users")
+        mockMvc.perform(get("/api/v1/users")
                         .header("Authorization", authHeader))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(2))));
@@ -184,7 +184,7 @@ class AuthenticationIntegrationTest {
         // 5. Update user data
         UpdateUserRequest updateRequest = new UpdateUserRequest("crud_updated@coeur.app", "Crud User Updated", "ROLE_ADMIN");
 
-        mockMvc.perform(put("/api/users/" + newUserId)
+        mockMvc.perform(put("/api/v1/users/" + newUserId)
                         .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
@@ -194,12 +194,12 @@ class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.roles", is("ROLE_ADMIN")));
 
         // 6. Delete user by ID
-        mockMvc.perform(delete("/api/users/" + newUserId)
+        mockMvc.perform(delete("/api/v1/users/" + newUserId)
                         .header("Authorization", authHeader))
                 .andExpect(status().isNoContent());
 
         // 7. Fetch the deleted user (should return 404 Not Found through our exception)
-        mockMvc.perform(get("/api/users/" + newUserId)
+        mockMvc.perform(get("/api/v1/users/" + newUserId)
                         .header("Authorization", authHeader))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail", is("User not found.")));
@@ -208,7 +208,7 @@ class AuthenticationIntegrationTest {
     @Test
     void shouldRejectInvalidPayloadsWithBadRequest() throws Exception {
         // 1. Registration with blank password and invalid email
-        mockMvc.perform(post("/api/users/register")
+        mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterUserRequest("invalid", " ", "John"))))
                 .andExpect(status().isBadRequest())
@@ -216,26 +216,26 @@ class AuthenticationIntegrationTest {
                 .andExpect(jsonPath("$.errors.password", is("Password is required.")));
 
         // 2. Login without a password
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest("john@coeur.app", null))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.password", is("Password is required.")));
 
         // 3. Refresh without a token
-        mockMvc.perform(post("/api/auth/refresh")
+        mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RefreshTokenRequest(null))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.refreshToken", is("Refresh token is required.")));
 
         // 4. Update with missing fields (requires authentication)
-        mockMvc.perform(post("/api/users/register")
+        mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterUserRequest("valid@coeur.app", "secret123", "Valid User"))))
                 .andExpect(status().isCreated());
 
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest("valid@coeur.app", "secret123"))))
                 .andExpect(status().isOk())
@@ -243,11 +243,11 @@ class AuthenticationIntegrationTest {
 
         String token = objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("accessToken").asText();
         String userId = objectMapper.readTree(
-                mockMvc.perform(get("/api/users/me").header("Authorization", "Bearer " + token))
+                mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + token))
                         .andReturn().getResponse().getContentAsString()
         ).get("id").asText();
 
-        mockMvc.perform(put("/api/users/" + userId)
+        mockMvc.perform(put("/api/v1/users/" + userId)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateUserRequest(null, " ", null))))
@@ -260,19 +260,19 @@ class AuthenticationIntegrationTest {
     @Test
     void shouldRejectMalformedRequestsWithBadRequest() throws Exception {
         // 1. Broken JSON in the body
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\": \"john@coeur.app\", "))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail", is("Missing or malformed request body.")));
 
         // 2. Non-numeric ID in the path (requires authentication)
-        mockMvc.perform(post("/api/users/register")
+        mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterUserRequest("path@coeur.app", "secret123", "Path User"))))
                 .andExpect(status().isCreated());
 
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest("path@coeur.app", "secret123"))))
                 .andExpect(status().isOk())
@@ -280,7 +280,7 @@ class AuthenticationIntegrationTest {
 
         String token = objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("accessToken").asText();
 
-        mockMvc.perform(get("/api/users/abc")
+        mockMvc.perform(get("/api/v1/users/abc")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail", is("Parameter 'id' has an invalid value.")));
