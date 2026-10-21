@@ -83,7 +83,7 @@ explicitly in `identity/package-info.java` and enforced by `ModularityTests`.
 | GET | `/api/v1/shopping-lists` | Lists the authenticated user's shopping lists |
 | POST | `/api/v1/shopping-lists` | Creates a new shopping list |
 | POST | `/api/v1/shopping-lists/{id}/items` | Adds an item to a shopping list |
-| GET | `/health` | Simple health check |
+| GET | `/api/v1/health` | Simple health check |
 | GET | `/actuator/**` | Spring Actuator endpoints |
 
 With the `dev` profile active, interactive documentation is available at `/swagger-ui.html`.
@@ -182,7 +182,7 @@ Pipeline defined in `.github/workflows/ci-cd.yml`, triggered on push to `main`:
 
 - `spring-boot-starter-actuator` enabled — exposes Spring's standard metrics/health
   endpoints at `/actuator`.
-- A dedicated `/health` endpoint, used by the container healthcheck in `compose.yaml`.
+- A dedicated `/api/v1/health` endpoint, used by the container healthcheck in `compose.yaml`.
 
 ## License
 
