@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/items")
+@RequestMapping("/api/v1/items")
 @RequiredArgsConstructor
 @Tag(name = "Items", description = "Endpoints for managing (CRUD) the item catalog")
 public class ItemController {

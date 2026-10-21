@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/shopping-lists")
+@RequestMapping("/api/v1/shopping-lists")
 @RequiredArgsConstructor
 @Tag(name = "Shopping Lists", description = "Endpoints for managing shopping lists and their items")
 public class ShoppingListController {
