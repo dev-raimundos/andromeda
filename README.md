@@ -29,8 +29,7 @@ src/main/java/br/app/coeur/
 ├── api/                  # OPEN module: cross-cutting configuration of the "api" artifact itself
 │   ├── config/           # CacheConfig, GlobalExceptionHandler, OpenApiConfig, WebConfig, ...
 │   ├── exception/        # Infrastructure-level exceptions (e.g. RateLimitExceededException)
-│   ├── filter/           # RateLimitingFilter
-│   └── health/           # Simple health check endpoint
+│   └── filter/           # RateLimitingFilter
 ├── shared/               # OPEN module: shared kernel
 │   ├── exception/        # BusinessException, ConflictException, ResourceNotFoundException
 │   ├── persistence/      # BaseEntity (safe equals/hashCode for Hibernate proxies, auditable created_at/updated_at)
@@ -83,7 +82,6 @@ explicitly in `identity/package-info.java` and enforced by `ModularityTests`.
 | GET | `/api/v1/shopping-lists` | Lists the authenticated user's shopping lists |
 | POST | `/api/v1/shopping-lists` | Creates a new shopping list |
 | POST | `/api/v1/shopping-lists/{id}/items` | Adds an item to a shopping list |
-| GET | `/api/v1/health` | Simple health check |
 | GET | `/actuator/**` | Spring Actuator endpoints |
 
 With the `dev` profile active, interactive documentation is available at `/swagger-ui.html`.
@@ -182,7 +180,7 @@ Pipeline defined in `.github/workflows/ci-cd.yml`, triggered on push to `main`:
 
 - `spring-boot-starter-actuator` enabled — exposes Spring's standard metrics/health
   endpoints at `/actuator`.
-- A dedicated `/api/v1/health` endpoint, used by the container healthcheck in `compose.yaml`.
+- `/actuator/health` is used by the container healthcheck in `compose.yaml`.
 
 ## License
 
