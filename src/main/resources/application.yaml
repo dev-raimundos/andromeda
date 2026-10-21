@@ -35,6 +35,10 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
 
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+
 # API documentation (Swagger/OpenAPI) disabled by default.
 # Re-enabled only in the "dev" profile (see application-dev.yaml).
 springdoc:
