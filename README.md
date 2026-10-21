@@ -63,26 +63,26 @@ explicitly in `identity/package-info.java` and enforced by `ModularityTests`.
 ## Authentication
 
 - OAuth2 Resource Server with JWT validation (keys configured in `JwtKeyConfig`).
-- Login and refresh token endpoints under `/api/auth`.
+- Login and refresh token endpoints under `/api/v1/auth`.
 - Security configuration centralized in `SecurityConfig`.
 
 ## Main endpoints
 
 | Method | Route | Description |
 |---|---|---|
-| POST | `/api/auth/login` | Authenticates the user and issues tokens |
-| POST | `/api/auth/refresh` | Renews the access token from a refresh token |
-| POST | `/api/users/register` | Registers a new user |
-| GET | `/api/users/me` | Returns the authenticated user |
-| GET | `/api/users` | Lists users (paginated) |
-| GET | `/api/users/{id}` | Finds a user by ID |
-| PUT | `/api/users/{id}` | Updates a user |
-| DELETE | `/api/users/{id}` | Removes a user |
-| GET | `/api/items` | Lists catalog items (paginated) |
-| POST | `/api/items` | Registers a new catalog item |
-| GET | `/api/shopping-lists` | Lists the authenticated user's shopping lists |
-| POST | `/api/shopping-lists` | Creates a new shopping list |
-| POST | `/api/shopping-lists/{id}/items` | Adds an item to a shopping list |
+| POST | `/api/v1/auth/login` | Authenticates the user and issues tokens |
+| POST | `/api/v1/auth/refresh` | Renews the access token from a refresh token |
+| POST | `/api/v1/users/register` | Registers a new user |
+| GET | `/api/v1/users/me` | Returns the authenticated user |
+| GET | `/api/v1/users` | Lists users (paginated) |
+| GET | `/api/v1/users/{id}` | Finds a user by ID |
+| PUT | `/api/v1/users/{id}` | Updates a user |
+| DELETE | `/api/v1/users/{id}` | Removes a user |
+| GET | `/api/v1/items` | Lists catalog items (paginated) |
+| POST | `/api/v1/items` | Registers a new catalog item |
+| GET | `/api/v1/shopping-lists` | Lists the authenticated user's shopping lists |
+| POST | `/api/v1/shopping-lists` | Creates a new shopping list |
+| POST | `/api/v1/shopping-lists/{id}/items` | Adds an item to a shopping list |
 | GET | `/health` | Simple health check |
 | GET | `/actuator/**` | Spring Actuator endpoints |
 
