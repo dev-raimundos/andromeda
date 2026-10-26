@@ -1,6 +1,6 @@
 package br.app.coeur.shared.exception;
 
-/** Indica violações genéricas de regra de negócio. */
+/** Indicates a generic business rule violation. */
 public class BusinessException extends RuntimeException {
 
     public BusinessException(String message) {

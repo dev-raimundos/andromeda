@@ -9,14 +9,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Injeta no parâmetro o ID do usuário autenticado (claim {@code sub} do JWT).
- * O parâmetro deve ser do tipo {@link Long}.
+ * Injects the authenticated user's ID (JWT {@code sub} claim) into the parameter.
+ * The parameter must be of type {@link java.util.UUID}.
  *
- * <p>É resolvida por {@link CurrentUserIdArgumentResolver}.</p>
+ * <p>Resolved by {@link CurrentUserIdArgumentResolver}.</p>
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Parameter(hidden = true) // não aparece como parâmetro de entrada no Swagger
+@Parameter(hidden = true) // does not appear as an input parameter in Swagger
 public @interface CurrentUserId {
 }

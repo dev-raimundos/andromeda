@@ -1,6 +1,6 @@
 package br.app.coeur.shared.exception;
 
-/** Indica conflitos de regra de negócio. */
+/** Indicates a business rule conflict. */
 public class ConflictException extends RuntimeException {
 
     public ConflictException(String message) {

@@ -12,3 +12,7 @@ spring:
 
   cache:
     type: none
+
+app:
+  cors:
+    allowed-origins: http://localhost:4200
