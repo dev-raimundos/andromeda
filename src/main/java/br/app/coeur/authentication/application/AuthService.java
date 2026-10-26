@@ -1,12 +1,12 @@
-package br.app.coeur.identity.application;
+package br.app.coeur.authentication.application;
 
-import br.app.coeur.identity.application.dto.request.LoginRequest;
-import br.app.coeur.identity.application.dto.request.RefreshTokenRequest;
-import br.app.coeur.identity.application.dto.response.TokenResponse;
-import br.app.coeur.identity.domain.RefreshToken;
-import br.app.coeur.identity.domain.RefreshTokenRepository;
-import br.app.coeur.identity.domain.exception.InvalidCredentialsException;
-import br.app.coeur.identity.domain.exception.InvalidRefreshTokenException;
+import br.app.coeur.authentication.application.dto.request.LoginRequest;
+import br.app.coeur.authentication.application.dto.request.RefreshTokenRequest;
+import br.app.coeur.authentication.application.dto.response.TokenResponse;
+import br.app.coeur.authentication.domain.RefreshToken;
+import br.app.coeur.authentication.domain.RefreshTokenRepository;
+import br.app.coeur.authentication.domain.exception.InvalidCredentialsException;
+import br.app.coeur.authentication.domain.exception.InvalidRefreshTokenException;
 import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.user.domain.User;
 import br.app.coeur.user.domain.UserRepository;
@@ -51,7 +51,9 @@ public class AuthService {
                 .filter(token -> token.isValid(Instant.now()))
                 .orElseThrow(InvalidRefreshTokenException::new);
 
-        User user = userRepository.findById(oldToken.getUserId()).orElseThrow(UserNotFoundException::new);
+        User user = userRepository.findById(oldToken.getUserId()).orElseThrow(
+                UserNotFoundException::new
+        );
 
         oldToken.revoke();
 

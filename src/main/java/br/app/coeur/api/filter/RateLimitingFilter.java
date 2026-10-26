@@ -36,7 +36,13 @@ public class RateLimitingFilter implements Filter {
         if (request instanceof HttpServletRequest httpRequest && response instanceof HttpServletResponse httpResponse) {
             String ip = getClientIp(httpRequest);
 
-            TokenBucket bucket = ipBuckets.computeIfAbsent(ip, k -> new TokenBucket(MAX_TOKENS, REFILL_PERIOD_SECONDS));
+            TokenBucket bucket = ipBuckets.computeIfAbsent(
+                    ip,
+                    k -> new TokenBucket(
+                            MAX_TOKENS,
+                            REFILL_PERIOD_SECONDS
+                    )
+            );
 
             if (!bucket.tryConsume()) {
                 RateLimitExceededException exception = new RateLimitExceededException(ip);
@@ -55,9 +61,11 @@ public class RateLimitingFilter implements Filter {
 
     private String getClientIp(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
+
         if (xfHeader == null) {
             return request.getRemoteAddr();
         }
+
         return xfHeader.split(",")[0];
     }
 

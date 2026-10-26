@@ -1,7 +1,7 @@
-package br.app.coeur.identity.infrastructure.persistence;
+package br.app.coeur.authentication.infrastructure.persistence;
 
-import br.app.coeur.identity.domain.RefreshToken;
-import br.app.coeur.identity.domain.RefreshTokenRepository;
+import br.app.coeur.authentication.domain.RefreshToken;
+import br.app.coeur.authentication.domain.RefreshTokenRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

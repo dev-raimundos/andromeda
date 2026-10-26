@@ -1,9 +1,9 @@
-package br.app.coeur.identity.infrastructure.web;
+package br.app.coeur.authentication.infrastructure.web;
 
-import br.app.coeur.identity.application.AuthService;
-import br.app.coeur.identity.application.dto.request.LoginRequest;
-import br.app.coeur.identity.application.dto.request.RefreshTokenRequest;
-import br.app.coeur.identity.application.dto.response.TokenResponse;
+import br.app.coeur.authentication.application.AuthService;
+import br.app.coeur.authentication.application.dto.request.LoginRequest;
+import br.app.coeur.authentication.application.dto.request.RefreshTokenRequest;
+import br.app.coeur.authentication.application.dto.response.TokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

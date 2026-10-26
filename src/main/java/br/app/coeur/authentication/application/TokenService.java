@@ -1,4 +1,4 @@
-package br.app.coeur.identity.application;
+package br.app.coeur.authentication.application;
 
 import br.app.coeur.user.domain.User;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package br.app.coeur.identity.domain;
+package br.app.coeur.authentication.domain;
 
 import java.util.Optional;
 import java.util.UUID;

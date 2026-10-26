@@ -1,4 +1,4 @@
-package br.app.coeur.identity.domain.exception;
+package br.app.coeur.authentication.domain.exception;
 
 import br.app.coeur.shared.exception.BusinessException;
 
