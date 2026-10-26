@@ -30,10 +30,11 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
             summary = "Register a new user",
-            description = "Creates a new regular user in the database. Public endpoint."
+            description = "Creates a new regular user in the database. Requires JWT authentication."
     )
     @ApiResponse(responseCode = "201", description = "User registered successfully")
     @ApiResponse(responseCode = "400", description = "Email already in use or invalid payload")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
     public UserResponse register(@Valid @RequestBody RegisterUserRequest request) {
         return userService.register(request);
     }

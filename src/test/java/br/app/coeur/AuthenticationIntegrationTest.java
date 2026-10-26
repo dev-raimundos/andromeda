@@ -1,10 +1,13 @@
 package br.app.coeur;
 
+import br.app.coeur.authentication.application.TokenService;
 import br.app.coeur.authentication.application.dto.request.LoginRequest;
 import br.app.coeur.authentication.application.dto.request.RefreshTokenRequest;
 import br.app.coeur.user.application.dto.request.RegisterUserRequest;
 import br.app.coeur.user.application.dto.request.UpdateUserRequest;
+import br.app.coeur.user.domain.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -14,6 +17,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -28,7 +34,20 @@ class AuthenticationIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private TokenService tokenService;
+
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
+    // User registration is a protected endpoint, so the tests need a valid JWT to create users
+    private String registrarAuthHeader;
+
+    @BeforeEach
+    void setUpRegistrarToken() {
+        User registrar = User.register("registrar@coeur.app", "unused", "Registrar");
+        ReflectionTestUtils.setField(registrar, "id", UUID.randomUUID());
+        registrarAuthHeader = "Bearer " + tokenService.generateAccessToken(registrar);
+    }
 
     @Test
     void shouldPerformFullAuthenticationLifecycle() throws Exception {
@@ -36,6 +55,7 @@ class AuthenticationIntegrationTest {
         RegisterUserRequest registerRequest = new RegisterUserRequest("test@coeur.app", "secret123", "John Doe");
 
         mockMvc.perform(post("/api/v1/users/register")
+                        .header("Authorization", registrarAuthHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated())
@@ -106,6 +126,7 @@ class AuthenticationIntegrationTest {
         RegisterUserRequest registerRequest = new RegisterUserRequest("lock@coeur.app", "secret123", "Locked User");
 
         mockMvc.perform(post("/api/v1/users/register")
+                        .header("Authorization", registrarAuthHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated());
@@ -144,6 +165,7 @@ class AuthenticationIntegrationTest {
         RegisterUserRequest adminRegister = new RegisterUserRequest("admin@coeur.app", "admin123", "Admin User");
 
         mockMvc.perform(post("/api/v1/users/register")
+                        .header("Authorization", registrarAuthHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(adminRegister)))
                 .andExpect(status().isCreated());
@@ -161,6 +183,7 @@ class AuthenticationIntegrationTest {
         RegisterUserRequest userRequest = new RegisterUserRequest("crud@coeur.app", "crud123", "Crud User");
 
         MvcResult createResult = mockMvc.perform(post("/api/v1/users/register")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isCreated())
@@ -209,6 +232,7 @@ class AuthenticationIntegrationTest {
     void shouldRejectInvalidPayloadsWithBadRequest() throws Exception {
         // 1. Registration with blank password and invalid email
         mockMvc.perform(post("/api/v1/users/register")
+                        .header("Authorization", registrarAuthHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterUserRequest("invalid", " ", "John"))))
                 .andExpect(status().isBadRequest())
@@ -231,6 +255,7 @@ class AuthenticationIntegrationTest {
 
         // 4. Update with missing fields (requires authentication)
         mockMvc.perform(post("/api/v1/users/register")
+                        .header("Authorization", registrarAuthHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterUserRequest("valid@coeur.app", "secret123", "Valid User"))))
                 .andExpect(status().isCreated());
@@ -268,6 +293,7 @@ class AuthenticationIntegrationTest {
 
         // 2. Non-numeric ID in the path (requires authentication)
         mockMvc.perform(post("/api/v1/users/register")
+                        .header("Authorization", registrarAuthHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterUserRequest("path@coeur.app", "secret123", "Path User"))))
                 .andExpect(status().isCreated());
