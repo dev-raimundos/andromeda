@@ -1,4 +1,4 @@
-package br.app.coeur.identity.application.dto.request;
+package br.app.coeur.authentication.application.dto.request;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;

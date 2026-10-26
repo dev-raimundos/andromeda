@@ -1,7 +1,7 @@
 package br.app.coeur;
 
-import br.app.coeur.identity.application.dto.request.LoginRequest;
-import br.app.coeur.identity.application.dto.request.RefreshTokenRequest;
+import br.app.coeur.authentication.application.dto.request.LoginRequest;
+import br.app.coeur.authentication.application.dto.request.RefreshTokenRequest;
 import br.app.coeur.user.application.dto.request.RegisterUserRequest;
 import br.app.coeur.user.application.dto.request.UpdateUserRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
