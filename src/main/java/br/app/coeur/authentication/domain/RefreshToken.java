@@ -10,7 +10,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
-import org.jspecify.annotations.NonNull;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -46,12 +45,8 @@ public class RefreshToken extends BaseEntity<UUID> {
         this.revoked = false;
     }
 
-    public static RefreshToken issue(String token, UUID userId, @NonNull Instant now, Duration validFor) {
-        return new RefreshToken(
-                token,
-                userId,
-                now.plus(validFor)
-        );
+    public static RefreshToken issue(String token, UUID userId, Instant now, Duration validFor) {
+        return new RefreshToken(token, userId, now.plus(validFor));
     }
 
     public boolean isExpired(Instant now) {
