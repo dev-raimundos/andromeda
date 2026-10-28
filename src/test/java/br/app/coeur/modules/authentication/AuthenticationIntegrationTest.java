@@ -341,4 +341,48 @@ class AuthenticationIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.name", is("Updated")));
     }
 
+    @Autowired
+    private br.app.coeur.modules.authentication.service.AuthService authService;
+
+    @Autowired
+    private br.app.coeur.modules.authentication.repository.RefreshTokenRepository refreshTokenRepository;
+
+    @Test
+    void onlyOneConcurrentRefreshCanConsumeTheToken() throws Exception {
+        User user = userRepository.save(User.register("concurrent@coeur.app", "unused", "Concurrent"));
+        refreshTokenRepository.save(br.app.coeur.modules.authentication.model.RefreshToken.issue(
+                "concurrent-refresh", user.getId(), java.time.Instant.now(), java.time.Duration.ofDays(1)));
+        var start = new java.util.concurrent.CountDownLatch(1);
+        try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<Boolean> attempt = () -> {
+                start.await();
+                try {
+                    authService.refresh(new RefreshTokenRequest("concurrent-refresh"));
+                    return true;
+                } catch (br.app.coeur.modules.authentication.exception.InvalidRefreshTokenException expected) {
+                    return false;
+                }
+            };
+            var first = executor.submit(attempt);
+            var second = executor.submit(attempt);
+            start.countDown();
+            org.assertj.core.api.Assertions.assertThat(java.util.List.of(
+                    first.get(10, java.util.concurrent.TimeUnit.SECONDS),
+                    second.get(10, java.util.concurrent.TimeUnit.SECONDS))).containsExactlyInAnyOrder(true, false);
+        }
+    }
+
+    @Test
+    void logoutRevokesRefreshTokenAndIsIdempotent() throws Exception {
+        User user = userRepository.save(User.register("logout@coeur.app", "unused", "Logout"));
+        refreshTokenRepository.save(br.app.coeur.modules.authentication.model.RefreshToken.issue(
+                "logout-refresh", user.getId(), java.time.Instant.now(), java.time.Duration.ofDays(1)));
+        String body = "{\"refreshToken\":\"logout-refresh\"}";
+        for (int i = 0; i < 2; i++) {
+            mockMvc.perform(post("/api/v1/auth/logout").contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isNoContent());
+        }
+        mockMvc.perform(post("/api/v1/auth/refresh").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
+    }
 }

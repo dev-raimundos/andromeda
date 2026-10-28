@@ -1,9 +1,10 @@
 package br.app.coeur.modules.authentication.controller;
 
-import br.app.coeur.modules.authentication.service.AuthService;
 import br.app.coeur.modules.authentication.dto.request.LoginRequest;
 import br.app.coeur.modules.authentication.dto.request.RefreshTokenRequest;
 import br.app.coeur.modules.authentication.dto.response.TokenResponse;
+import br.app.coeur.modules.authentication.service.AuthService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/logout")
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    public void logout(@Valid @RequestBody RefreshTokenRequest request) {
+        authService.logout(request);
+    }
 
     @PostMapping("/login")
     @Operation(

@@ -1,6 +1,7 @@
 package br.app.coeur.modules.authentication.model;
 
 import br.app.coeur.shared.model.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -50,7 +51,7 @@ public class RefreshToken extends BaseEntity<UUID> {
     }
 
     public boolean isExpired(Instant now) {
-        return expiryDate.isBefore(now);
+        return !expiryDate.isAfter(now);
     }
 
     public boolean isValid(Instant now) {

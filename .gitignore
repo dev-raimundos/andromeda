@@ -36,3 +36,4 @@ build/
 certs/*.crt
 
 .env
+certs/*.pem

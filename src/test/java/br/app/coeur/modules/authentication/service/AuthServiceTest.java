@@ -5,10 +5,11 @@ import br.app.coeur.modules.authentication.dto.request.RefreshTokenRequest;
 import br.app.coeur.modules.authentication.dto.response.TokenResponse;
 import br.app.coeur.modules.authentication.model.RefreshToken;
 import br.app.coeur.modules.authentication.repository.RefreshTokenRepository;
-import br.app.coeur.shared.exception.BusinessException;
-import br.app.coeur.shared.exception.ResourceNotFoundException;
 import br.app.coeur.modules.user.model.User;
 import br.app.coeur.modules.user.repository.UserRepository;
+import br.app.coeur.shared.exception.BusinessException;
+import br.app.coeur.shared.exception.ResourceNotFoundException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -159,6 +160,17 @@ class AuthServiceTest {
     }
 
     // ---------- refresh ----------
+
+    @Test
+    void refreshShouldRejectLockedUser() {
+        RefreshToken token = RefreshToken.issue("locked-token", USER_ID, Instant.now(), Duration.ofDays(7));
+        ReflectionTestUtils.setField(user, "lockExpiredAt", Instant.now().plusSeconds(60));
+        when(refreshTokenRepository.findByToken("locked-token")).thenReturn(Optional.of(token));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+        assertThatThrownBy(() -> authService.refresh(new RefreshTokenRequest("locked-token")))
+                .isInstanceOf(br.app.coeur.modules.user.exception.UserBlockedException.class);
+        verify(refreshTokenRepository, never()).save(any());
+    }
 
     @Test
     void refreshShouldRotateTokens() {

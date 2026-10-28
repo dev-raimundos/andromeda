@@ -3,15 +3,16 @@ package br.app.coeur.modules.authentication.service;
 import br.app.coeur.modules.authentication.dto.request.LoginRequest;
 import br.app.coeur.modules.authentication.dto.request.RefreshTokenRequest;
 import br.app.coeur.modules.authentication.dto.response.TokenResponse;
-import br.app.coeur.modules.authentication.model.RefreshToken;
-import br.app.coeur.modules.authentication.repository.RefreshTokenRepository;
 import br.app.coeur.modules.authentication.exception.InvalidCredentialsException;
 import br.app.coeur.modules.authentication.exception.InvalidRefreshTokenException;
-import br.app.coeur.shared.exception.BusinessException;
-import br.app.coeur.modules.user.model.User;
-import br.app.coeur.modules.user.repository.UserRepository;
+import br.app.coeur.modules.authentication.model.RefreshToken;
+import br.app.coeur.modules.authentication.repository.RefreshTokenRepository;
 import br.app.coeur.modules.user.exception.UserBlockedException;
 import br.app.coeur.modules.user.exception.UserNotFoundException;
+import br.app.coeur.modules.user.model.User;
+import br.app.coeur.modules.user.repository.UserRepository;
+import br.app.coeur.shared.exception.BusinessException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -57,7 +58,16 @@ public class AuthService {
 
         oldToken.revoke();
 
+        if (user.isLocked(Instant.now())) {
+            throw new UserBlockedException();
+        }
+
         return issueTokens(user);
+    }
+
+    @Transactional
+    public void logout(RefreshTokenRequest request) {
+        refreshTokenRepository.findByToken(request.refreshToken()).ifPresent(RefreshToken::revoke);
     }
 
     private User verifyCredentials(String email, String rawPassword) {

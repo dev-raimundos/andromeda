@@ -14,5 +14,8 @@ spring:
     type: none
 
 app:
+  jwt:
+    public-key: file:target/test-keys/public.pem
+    private-key: file:target/test-keys/private.pem
   cors:
     allowed-origins: http://localhost:4200

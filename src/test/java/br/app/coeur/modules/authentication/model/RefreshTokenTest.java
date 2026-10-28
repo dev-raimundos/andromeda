@@ -42,6 +42,12 @@ class RefreshTokenTest {
     }
 
     @Test
+    void shouldBeInvalidAtExactExpiry() {
+        RefreshToken token = RefreshToken.issue("abc", USER_ID, NOW, VALIDITY);
+        assertThat(token.isValid(NOW.plus(VALIDITY))).isFalse();
+    }
+
+    @Test
     void revokeShouldMakeTokenInvalid() {
         RefreshToken token = RefreshToken.issue("abc", USER_ID, NOW, VALIDITY);
 
