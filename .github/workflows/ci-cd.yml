@@ -74,9 +74,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Disparar webhook de deploy do Dokploy
-        run: |
-          curl -sSf -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -H "X-GitHub-Event: push" \
-            -d '{"ref":"refs/heads/main","repository":{"full_name":"${{ github.repository }}"}}'
+    - name: Disparar webhook de deploy do Dokploy
+      run: |
+        status=$(curl -sS -o resp.txt -w "%{http_code}" -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" \
+          -H "Content-Type: application/json" \
+          -H "X-GitHub-Event: push" \
+          -d '{"ref":"refs/heads/main","repository":{"full_name":"${{ github.repository }}"}}')
+        echo "HTTP $status"
+        cat resp.txt
+        [ "$status" -lt 400 ]
