@@ -46,3 +46,15 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: /dev
+      prefix: stdout
+      suffix: ''
+      file-date-format: ''
+      rotate: false
+      buffered: false
+      pattern: '%h "%r" %s %b %Dms'
