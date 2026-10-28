@@ -1,84 +1,116 @@
 package br.app.coeur.core.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import br.app.coeur.modules.authentication.model.JwtSigningKey;
+import br.app.coeur.modules.authentication.service.JwtKeyService;
+
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
-import org.springframework.core.io.Resource;
-import org.springframework.security.converter.RsaKeyConverters;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.transaction.event.TransactionalEventListener;
 
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.security.KeyFactory;
 import java.security.Signature;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.UUID;
 
 @Configuration
 public class JwtKeyConfig {
+    private static final Duration CACHE_TTL = Duration.ofSeconds(5);
+    private final JwtKeyService service;
+    private final Clock clock;
+    private volatile CachedKey cached;
 
-    private final RSAPublicKey publicKey;
-    private final RSAPrivateKey privateKey;
+    @Autowired
+    public JwtKeyConfig(JwtKeyService service) {
+        this(service, Clock.systemUTC());
+    }
 
-    public JwtKeyConfig(
-            @Value("${app.jwt.public-key:file:certs/jwt-public.pem}") Resource publicResource,
-            @Value("${app.jwt.private-key:file:certs/jwt-private.pem}") Resource privateResource,
-            Environment environment) {
+    JwtKeyConfig(JwtKeyService service, Clock clock) {
+        this.service = service;
+        this.clock = clock;
+        this.cached = load(service.initialize(), clock.instant().plus(CACHE_TTL));
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder() {
+        return parameters -> {
+            CachedKey key = current();
+            JwsHeader header = JwsHeader.with(SignatureAlgorithm.RS256).keyId(key.id().toString()).build();
+            return key.encoder().encode(JwtEncoderParameters.from(header, parameters.getClaims()));
+        };
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return token -> current().decoder().decode(token);
+    }
+
+    @TransactionalEventListener
+    public synchronized void onKeyRotated(JwtKeyService.KeyRotated event) {
+        // Executed after commit: never cache key material from a rolled-back rotation.
+        cached = null;
+    }
+
+    private CachedKey current() {
+        CachedKey key = cached;
+        if (key != null && clock.instant().isBefore(key.expiresAt())) return key;
+        return refresh();
+    }
+
+    private synchronized CachedKey refresh() {
+        Instant now = clock.instant();
+        CachedKey key = cached;
+        if (key != null && now.isBefore(key.expiresAt())) return key;
+        JwtSigningKey stored = service.getActiveKey();
+        cached = key != null && key.id().equals(stored.getKeyId())
+                ? new CachedKey(key.id(), key.encoder(), key.decoder(), now.plus(CACHE_TTL))
+                : load(stored, now.plus(CACHE_TTL));
+        return cached;
+    }
+
+    private CachedKey load(JwtSigningKey stored, Instant expiresAt) {
         try {
-            if (publicResource.exists() && privateResource.exists()) {
-                try (var pub = publicResource.getInputStream(); var priv = privateResource.getInputStream()) {
-                    publicKey = RsaKeyConverters.x509().convert(pub);
-                    privateKey = RsaKeyConverters.pkcs8().convert(priv);
-                }
-            } else if (!publicResource.exists() && !privateResource.exists()
-                    && environment.acceptsProfiles(Profiles.of("dev", "test"))) {
-                KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-                generator.initialize(2048);
-                KeyPair pair = generator.generateKeyPair();
-                publicKey = (RSAPublicKey) pair.getPublic();
-                privateKey = (RSAPrivateKey) pair.getPrivate();
-                if (!environment.acceptsProfiles(Profiles.of("test"))) {
-                    var pubPath = publicResource.getFile().toPath();
-                    var privPath = privateResource.getFile().toPath();
-                    Files.createDirectories(pubPath.toAbsolutePath().getParent());
-                    Files.createDirectories(privPath.toAbsolutePath().getParent());
-                    Files.writeString(privPath, pem("PRIVATE KEY", privateKey.getEncoded()), StandardOpenOption.CREATE_NEW);
-                    Files.writeString(pubPath, pem("PUBLIC KEY", publicKey.getEncoded()), StandardOpenOption.CREATE_NEW);
-                }
-            } else {
-                throw new IllegalStateException("Configure JWT_PUBLIC_KEY and JWT_PRIVATE_KEY with persistent PEM resources.");
-            }
+            KeyFactory factory = KeyFactory.getInstance("RSA");
+            RSAPublicKey publicKey = (RSAPublicKey) factory.generatePublic(
+                    new X509EncodedKeySpec(Base64.getDecoder().decode(stored.getPublicKey())));
+            RSAPrivateKey privateKey = (RSAPrivateKey) factory.generatePrivate(
+                    new PKCS8EncodedKeySpec(Base64.getDecoder().decode(stored.getPrivateKey())));
             Signature signature = Signature.getInstance("SHA256withRSA");
-            byte[] challenge = "coeur-key-validation".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            byte[] challenge = new byte[]{1, 2, 3};
             signature.initSign(privateKey);
             signature.update(challenge);
             byte[] signed = signature.sign();
             signature.initVerify(publicKey);
             signature.update(challenge);
-            if (!signature.verify(signed)) {
-                throw new IllegalStateException("JWT public and private keys do not match.");
-            }
+            if (!signature.verify(signed)) throw new IllegalStateException("JWT keys in the database do not match.");
+            RSAKey jwk = new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(stored.getKeyId().toString()).build();
+            JwtEncoder encoder = new NimbusJwtEncoder(new ImmutableJWKSet<>(new JWKSet(jwk)));
+            NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
+            decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer("coeur-api"));
+            return new CachedKey(stored.getKeyId(), encoder, decoder, expiresAt);
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to load JWT signing keys", e);
+            throw new IllegalStateException("Unable to load JWT signing key from the database", e);
         }
     }
 
-    private static String pem(String type, byte[] encoded) {
-        return "-----BEGIN " + type + "-----\n"
-                + Base64.getMimeEncoder(64, new byte[]{'\n'}).encodeToString(encoded)
-                + "\n-----END " + type + "-----\n";
-    }
-
-    @Bean
-    public RSAPublicKey publicKey() {
-        return this.publicKey;
-    }
-
-    @Bean
-    public RSAPrivateKey privateKey() {
-        return this.privateKey;
+    private record CachedKey(UUID id, JwtEncoder encoder, JwtDecoder decoder, Instant expiresAt) {
     }
 }

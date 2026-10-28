@@ -2,17 +2,21 @@ package br.app.coeur.modules.authentication.controller;
 
 import br.app.coeur.modules.authentication.dto.request.LoginRequest;
 import br.app.coeur.modules.authentication.dto.request.RefreshTokenRequest;
+import br.app.coeur.modules.authentication.dto.response.JwtKeyResponse;
 import br.app.coeur.modules.authentication.dto.response.TokenResponse;
 import br.app.coeur.modules.authentication.service.AuthService;
+import br.app.coeur.modules.authentication.service.JwtKeyService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,9 +26,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtKeyService jwtKeyService;
+
+    @PostMapping("/keys")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Generate a new JWT signing key",
+            description = "Requires authentication. Replaces the active key and invalidates existing access tokens. "
+                    + "Only key metadata is returned; refresh tokens remain usable.")
+    public JwtKeyResponse generateKeys() {
+        return jwtKeyService.rotate();
+    }
 
     @PostMapping("/logout")
-    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(@Valid @RequestBody RefreshTokenRequest request) {
         authService.logout(request);
     }
