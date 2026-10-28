@@ -6,9 +6,8 @@ Coeur platform backend API, built with Spring Boot 4 / Java 21, with authenticat
 
 - **Java 21** (virtual threads enabled)
 - **Spring Boot 4.1.1** — Web MVC, Data JPA, Security, OAuth2 Resource Server
-- **Spring Modulith** — enforces module boundaries within the single Maven artifact
 - **PostgreSQL 18** (external/on-premise server) + **Flyway** for migrations
-- **Redis** (external server) — cache / rate limiting
+- **Redis** (external server) — cache
 - **springdoc-openapi** — Swagger documentation
 - **Lombok**
 - **JUnit 5 + Spring Boot Test + H2** — tests
@@ -17,48 +16,52 @@ Coeur platform backend API, built with Spring Boot 4 / Java 21, with authenticat
 
 ## Architecture
 
-The project is a single Maven artifact (`br.app.coeur:api`) organized as a **modular monolith**:
-each business module lives in its own top-level package under `br.app.coeur`, and
-[Spring Modulith](https://spring.io/projects/spring-modulith) verifies at test time
-(`ModularityTests`) that modules only reach each other through explicitly declared APIs —
-not just by convention. This keeps the codebase ready for new modules to be added later
-without their boundaries eroding over time.
+The project is a single Maven artifact (`br.app.coeur:api`) organized into business
+modules with simple layers. The main package contains `core`, `modules`, and `shared`.
 
 ```
 src/main/java/br/app/coeur/
-├── api/                  # OPEN module: cross-cutting configuration of the "api" artifact itself
-│   ├── config/           # CacheConfig, GlobalExceptionHandler, OpenApiConfig, WebConfig, ...
-│   ├── exception/        # Infrastructure-level exceptions (e.g. RateLimitExceededException)
-│   ├── filter/           # RateLimitingFilter
-│   └── health/           # Simple health check endpoint
-├── shared/               # OPEN module: shared kernel
-│   ├── exception/        # BusinessException, ConflictException, ResourceNotFoundException
-│   ├── persistence/      # BaseEntity (safe equals/hashCode for Hibernate proxies, auditable created_at/updated_at)
-│   ├── security/         # @CurrentUserId and its argument resolver
-│   └── util/             # JwtUtils
-├── identity/             # Login, refresh tokens, JWT/security configuration
-├── user/                 # User registration, lookup, update, and removal
-└── shopping/             # Shopping lists and item catalog
+├── core/                 # Application-wide configuration and HTTP infrastructure
+│   ├── config/           # Security, JWT keys, cache, CORS, errors, OpenAPI, MVC
+│   ├── controller/       # Health endpoint
+│   ├── filter/           # Rate limiting
+│   └── security/         # Current-user argument resolver
+├── modules/              # Business features
+│   ├── authentication/   # Login, refresh and logout
+│   ├── user/             # Profiles and user management
+│   └── shopping/         # Lists and item catalog
+└── shared/               # Small types reused across modules
+    ├── exception/        # BusinessException, ConflictException, ResourceNotFoundException
+    ├── model/            # Audited BaseEntity
+    ├── security/         # @CurrentUserId annotation
+    └── util/             # JWT helpers
 ```
 
-Each business module follows Clean Architecture layering internally:
+Each business module uses the same simple structure:
 
 ```
 <module>/
-├── domain/               # Entities with behavior, domain exceptions, repository ports (plain interfaces)
-├── application/          # Use-case services, transactions, request/response DTOs
-└── infrastructure/
-    ├── web/              # REST controllers
-    ├── persistence/      # Spring Data JPA repositories implementing the domain ports
-    └── config/           # Module-specific framework configuration (if any)
+├── controller/           # REST endpoints and request validation
+├── dto/
+│   ├── request/          # Input contracts
+│   └── response/         # Output contracts
+├── model/                # JPA entities and their invariants
+├── service/              # Business operations and transactions
+├── repository/           # Spring Data JPA interfaces and queries
+└── exception/            # Module-specific exceptions
 ```
 
-`api` and `shared` are declared as **open** Spring Modulith modules (`@ApplicationModule(type = OPEN)`),
-so any module can use them freely. Business modules are closed by default: only the `domain`
-package of a module is visible to others, and only when explicitly exposed as a
-`@NamedInterface`. Today `identity` is the only module that depends on another
-(`user::domain`, to look up the user during login/refresh); this dependency is declared
-explicitly in `identity/package-info.java` and enforced by `ModularityTests`.
+The normal flow is `controller -> service -> repository`; DTOs keep HTTP contracts
+separate from entities. Each repository extends `JpaRepository` directly. Services
+retain transaction boundaries and business behavior. Add module-local
+`config` or other folders only when a concrete need appears.
+
+`core` owns application infrastructure; `shared` contains only reusable types, without
+feature-specific logic. Authentication uses the user module's model and repository to
+look up accounts. The former ports/adapters and Spring Modulith metadata were removed
+in favor of these conventional packages. Tests mirror the packages under `src/test/java`.
+Redis entries use the `coeur:v2:` prefix to avoid reading DTOs serialized with the
+previous package names; old entries expire under their existing TTL.
 
 ## Authentication
 
@@ -148,8 +151,7 @@ COMPOSE_PROFILES=prod docker compose up -d --build
 ```
 
 Persistence/integration tests use an in-memory H2 database and do not depend on the
-external Postgres. The suite also includes `ModularityTests`, which fails the build if a
-module boundary is violated.
+external Postgres. Tests cover services, models, validation and authentication.
 
 ### Build
 
