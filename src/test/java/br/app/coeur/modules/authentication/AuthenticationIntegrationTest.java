@@ -322,7 +322,7 @@ class AuthenticationIntegrationTest {
         for (int i = 0; i < 100; i++) {
             var result = mockMvc.perform(get("/v3/api-docs"));
             if (result.andReturn().getResponse().getStatus() == 429) {
-                result.andExpect(jsonPath("$.error", containsString("Too many requests")));
+                result.andExpect(jsonPath("$.detail", containsString("Too many requests")));
                 return;
             }
             result.andExpect(status().isOk());
