@@ -65,7 +65,7 @@ previous package names; old entries expire under their existing TTL.
 
 ## Authentication
 
-- OAuth2 Resource Server with JWT validation (keys configured in `JwtKeyConfig`).
+- OAuth2 Resource Server with JWT validation and signing keys stored in PostgreSQL.
 - Login and refresh token endpoints under `/api/v1/auth`.
 - Security configuration centralized in `SecurityConfig`.
 
@@ -79,21 +79,37 @@ the same token twice. `POST /api/v1/auth/logout` accepts `{ "refreshToken": "...
 and idempotently revokes that token (204). Already-issued access tokens remain valid
 until expiration. Login revokes the user's previous refresh tokens.
 
-JWT keys must be persistent and shared by every replica. Configure `JWT_PUBLIC_KEY`
-(X.509 PEM resource) and `JWT_PRIVATE_KEY` (PKCS#8 PEM resource). Development creates
-and saves the missing pair under `certs/`; tests use ephemeral keys. Production fails
-at startup if the pair is missing, incomplete, or mismatched. PEM files are gitignored.
+Flyway migration `V3__create_jwt_signing_key_table.sql` creates the singleton
+`jwt_signing_key` table and its initial empty row. On startup, the API locks that row
+and generates an RSA-2048 pair only if it is empty. All instances connected to the
+same database reuse the persisted pair, including after restarts. No PEM files,
+JWT path variables, or certificate bind mounts are used.
 
-To provision a production pair once, in a protected directory:
+`POST /api/v1/auth/keys` generates a replacement pair under the same row lock. The
+endpoint requires a valid Bearer token, without a separate permission model. It
+accepts no body and returns 201 with only `keyId`, `algorithm` (`RS256`) and `createdAt`;
+private and public key material are never returned. Existing access tokens become
+invalid; refresh tokens remain usable to obtain new access tokens.
 
 ```bash
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out certs/jwt-private.pem
-openssl pkey -in certs/jwt-private.pem -pubout -out certs/jwt-public.pem
+curl -X POST https://your-api.example/api/v1/auth/keys \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-Keep the private key readable only by the application/deployment account. In Compose,
-`JWT_KEYS_DIRECTORY` is mounted read-only at `/run/secrets/coeur`; the container defaults
-to the `prod` Spring profile (`CONTAINER_SPRING_PROFILES_ACTIVE` overrides it).
+The signing and verification objects are cached in memory. The local instance
+invalidates its cache after the rotation transaction commits; other replicas check
+the database at most once every five seconds during token use. During that interval,
+replicas may temporarily disagree on the active key. They converge automatically
+without a restart. Rolled-back rotations leave the persisted and cached keys unchanged.
+
+The table stores Base64-encoded DER (PKCS#8 private key / X.509 public key); Base64 is
+encoding, not encryption. Restrict access to the database and its backups. The first
+deployment of this version generates a new pair, so access tokens signed by the old
+file-based pair need to be refreshed or obtained through login again.
+
+For existing Docker/Dokploy deployments, remove the old JWT path environment variables
+and certificate mount from the deployment configuration, keep Flyway enabled, and
+redeploy. The container defaults to `prod` (`CONTAINER_SPRING_PROFILES_ACTIVE` overrides it).
 
 Rate limiting uses bounded in-memory buckets (30 requests per minute per client,
 10,000 clients maximum, five-minute idle expiration), independently on each replica.
@@ -112,6 +128,7 @@ renders these fields; a `toast` extension is not required. Authorization failure
 | POST | `/api/v1/auth/login` | Authenticates the user and issues tokens |
 | POST | `/api/v1/auth/refresh` | Renews the access token from a refresh token |
 | POST | `/api/v1/auth/logout` | Revokes the supplied refresh token |
+| POST | `/api/v1/auth/keys` | Generates and activates a replacement JWT signing key (authenticated) |
 | POST | `/api/v1/users/register` | Registers a new user |
 | GET | `/api/v1/users/me` | Returns the authenticated user |
 | PUT | `/api/v1/users/me` | Updates own name/email without changing roles |
@@ -208,6 +225,7 @@ Migrations managed by Flyway under `src/main/resources/db/migration`:
 
 - `V1__create_tables.sql`
 - `V2__create_shopping_tables.sql`
+- `V3__create_jwt_signing_key_table.sql`
 
 Hibernate's `ddl-auto` is fixed to `none` — any schema change must go through a new Flyway
 migration.
