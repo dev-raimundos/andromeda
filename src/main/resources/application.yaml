@@ -8,9 +8,6 @@ spring:
   threads:
     virtual:
       enabled: true
-
-  # Loads the .env file from the project root when running via IDE/Maven.
-  # Real environment variables (e.g. Docker Compose) take precedence.
   config:
     import: optional:file:.env[.properties]
 
@@ -42,10 +39,7 @@ app:
   rate-limit:
     trusted-proxies: ${TRUSTED_PROXIES:}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS}
-
-# API documentation (Swagger/OpenAPI) disabled by default.
-# Re-enabled only in the "dev" profile (see application-dev.yaml).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
 springdoc:
   api-docs:
     enabled: false
