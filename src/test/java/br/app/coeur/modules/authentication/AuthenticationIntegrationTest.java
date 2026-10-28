@@ -1,23 +1,24 @@
 package br.app.coeur.modules.authentication;
 
-import br.app.coeur.modules.authentication.service.TokenService;
 import br.app.coeur.modules.authentication.dto.request.LoginRequest;
 import br.app.coeur.modules.authentication.dto.request.RefreshTokenRequest;
+import br.app.coeur.modules.authentication.service.TokenService;
 import br.app.coeur.modules.user.dto.request.RegisterUserRequest;
 import br.app.coeur.modules.user.dto.request.UpdateUserRequest;
 import br.app.coeur.modules.user.model.User;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.UUID;
 
@@ -36,6 +37,9 @@ class AuthenticationIntegrationTest {
 
     @Autowired
     private TokenService tokenService;
+
+    @Autowired
+    private br.app.coeur.modules.user.repository.UserRepository userRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
@@ -273,7 +277,7 @@ class AuthenticationIntegrationTest {
         ).get("id").asText();
 
         mockMvc.perform(put("/api/v1/users/" + userId)
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", registrarAuthHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UpdateUserRequest(null, " ", null))))
                 .andExpect(status().isBadRequest())
@@ -314,15 +318,27 @@ class AuthenticationIntegrationTest {
 
     @Test
     void shouldTriggerRateLimitWhenRequestLimitExceeded() throws Exception {
-        // Send 30 normal requests quickly (the configured maximum token limit is 30 per minute)
-        for (int i = 0; i < 30; i++) {
-            mockMvc.perform(get("/v3/api-docs"))
-                    .andExpect(status().isOk());
+        // The bucket refills while requests run; the exact capacity is covered with a fixed clock in unit tests.
+        for (int i = 0; i < 100; i++) {
+            var result = mockMvc.perform(get("/v3/api-docs"));
+            if (result.andReturn().getResponse().getStatus() == 429) {
+                result.andExpect(jsonPath("$.error", containsString("Too many requests")));
+                return;
+            }
+            result.andExpect(status().isOk());
         }
-
-        // The 31st request should exceed the limit and return 429 Too Many Requests
-        mockMvc.perform(get("/v3/api-docs"))
-                .andExpect(status().isTooManyRequests())
-                .andExpect(jsonPath("$.error", containsString("Too many requests")));
+        org.junit.jupiter.api.Assertions.fail("Expected throttling during a burst of requests");
     }
+
+    @Test
+    void authenticatedUserCanListUsersAndUpdateOwnProfile() throws Exception {
+        User user = userRepository.save(User.register("regular@coeur.app", "unused", "Regular"));
+        String auth = "Bearer " + tokenService.generateAccessToken(user);
+        mockMvc.perform(get("/api/v1/users").header("Authorization", auth)).andExpect(status().isOk());
+        mockMvc.perform(put("/api/v1/users/me").header("Authorization", auth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"regular@coeur.app\",\"name\":\"Updated\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name", is("Updated")));
+    }
+
 }

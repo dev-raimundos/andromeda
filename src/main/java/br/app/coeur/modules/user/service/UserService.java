@@ -1,12 +1,14 @@
 package br.app.coeur.modules.user.service;
 
 import br.app.coeur.modules.user.dto.request.RegisterUserRequest;
+import br.app.coeur.modules.user.dto.request.UpdateProfileRequest;
 import br.app.coeur.modules.user.dto.request.UpdateUserRequest;
 import br.app.coeur.modules.user.dto.response.UserResponse;
-import br.app.coeur.modules.user.model.User;
-import br.app.coeur.modules.user.repository.UserRepository;
 import br.app.coeur.modules.user.exception.EmailAlreadyInUseException;
 import br.app.coeur.modules.user.exception.UserNotFoundException;
+import br.app.coeur.modules.user.model.User;
+import br.app.coeur.modules.user.repository.UserRepository;
+
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,6 +67,17 @@ public class UserService {
 
         user.changeRoles(request.roles());
 
+        return UserResponse.from(user);
+    }
+
+    @Transactional
+    public UserResponse updateProfile(UUID id, UpdateProfileRequest request) {
+        User user = getUser(id);
+        if (!request.email().equals(user.getEmail()) && userRepository.existsByEmail(request.email())) {
+            throw new EmailAlreadyInUseException();
+        }
+        user.changeEmail(request.email());
+        user.rename(request.name());
         return UserResponse.from(user);
     }
 

@@ -1,10 +1,12 @@
 package br.app.coeur.modules.user.controller;
 
-import br.app.coeur.shared.security.CurrentUserId;
-import br.app.coeur.modules.user.service.UserService;
 import br.app.coeur.modules.user.dto.request.RegisterUserRequest;
+import br.app.coeur.modules.user.dto.request.UpdateProfileRequest;
 import br.app.coeur.modules.user.dto.request.UpdateUserRequest;
 import br.app.coeur.modules.user.dto.response.UserResponse;
+import br.app.coeur.modules.user.service.UserService;
+import br.app.coeur.shared.security.CurrentUserId;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,6 +61,13 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     public Page<UserResponse> listAll(@PageableDefault(size = 20) Pageable pageable) {
         return userService.findAll(pageable);
+    }
+
+    @PutMapping("/me")
+    @Operation(summary = "Update own profile", description = "Updates name and email without changing roles.")
+    public UserResponse updateProfile(@CurrentUserId UUID userId,
+                                      @Valid @RequestBody UpdateProfileRequest request) {
+        return userService.updateProfile(userId, request);
     }
 
     @GetMapping("/{id}")
