@@ -61,3 +61,4 @@ public class RefreshToken extends BaseEntity<UUID> {
         this.revoked = true;
     }
 }
+
