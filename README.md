@@ -69,14 +69,52 @@ previous package names; old entries expire under their existing TTL.
 - Login and refresh token endpoints under `/api/v1/auth`.
 - Security configuration centralized in `SecurityConfig`.
 
+Access tokens last 15 minutes. Every user endpoint requires authentication, with no
+role-based permissions. Authenticated users can manage users and update their own
+name/email through `PUT /api/v1/users/me`. The existing `roles` field is retained for
+API compatibility and does not restrict access. Shopping lists remain scoped to their owner.
+
+Refresh tokens rotate under a database row lock, so concurrent requests cannot consume
+the same token twice. `POST /api/v1/auth/logout` accepts `{ "refreshToken": "..." }`
+and idempotently revokes that token (204). Already-issued access tokens remain valid
+until expiration. Login revokes the user's previous refresh tokens.
+
+JWT keys must be persistent and shared by every replica. Configure `JWT_PUBLIC_KEY`
+(X.509 PEM resource) and `JWT_PRIVATE_KEY` (PKCS#8 PEM resource). Development creates
+and saves the missing pair under `certs/`; tests use ephemeral keys. Production fails
+at startup if the pair is missing, incomplete, or mismatched. PEM files are gitignored.
+
+To provision a production pair once, in a protected directory:
+
+```bash
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out certs/jwt-private.pem
+openssl pkey -in certs/jwt-private.pem -pubout -out certs/jwt-public.pem
+```
+
+Keep the private key readable only by the application/deployment account. In Compose,
+`JWT_KEYS_DIRECTORY` is mounted read-only at `/run/secrets/coeur`; the container defaults
+to the `prod` Spring profile (`CONTAINER_SPRING_PROFILES_ACTIVE` overrides it).
+
+Rate limiting uses bounded in-memory buckets (30 requests per minute per client,
+10,000 clients maximum, five-minute idle expiration), independently on each replica.
+Health probes and CORS preflights are excluded. `X-Forwarded-For` is ignored unless
+the direct peer is in `TRUSTED_PROXIES` (exact IPs, comma-separated); trusted proxies
+must append/overwrite the forwarding chain. For a cluster-wide quota, enforce it at
+the gateway. Throttling returns Problem Details with status 429 and `Retry-After`.
+
+API errors use Problem Details `detail` and optional field-level `errors`. The frontend
+renders these fields; a `toast` extension is not required. Authorization failures return 403.
+
 ## Main endpoints
 
 | Method | Route | Description |
 |---|---|---|
 | POST | `/api/v1/auth/login` | Authenticates the user and issues tokens |
 | POST | `/api/v1/auth/refresh` | Renews the access token from a refresh token |
+| POST | `/api/v1/auth/logout` | Revokes the supplied refresh token |
 | POST | `/api/v1/users/register` | Registers a new user |
 | GET | `/api/v1/users/me` | Returns the authenticated user |
+| PUT | `/api/v1/users/me` | Updates own name/email without changing roles |
 | GET | `/api/v1/users` | Lists users (paginated) |
 | GET | `/api/v1/users/{id}` | Finds a user by ID |
 | PUT | `/api/v1/users/{id}` | Updates a user |
@@ -151,7 +189,8 @@ COMPOSE_PROFILES=prod docker compose up -d --build
 ```
 
 Persistence/integration tests use an in-memory H2 database and do not depend on the
-external Postgres. Tests cover services, models, validation and authentication.
+external Postgres. They cover authentication, profile updates, refresh-token rotation and
+concurrency; unit tests cover services, models, DTO validation and core infrastructure.
 
 ### Build
 
