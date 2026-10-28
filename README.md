@@ -6,9 +6,8 @@ Coeur platform backend API, built with Spring Boot 4 / Java 21, with authenticat
 
 - **Java 21** (virtual threads enabled)
 - **Spring Boot 4.1.1** — Web MVC, Data JPA, Security, OAuth2 Resource Server
-- **Spring Modulith** — enforces module boundaries within the single Maven artifact
 - **PostgreSQL 18** (external/on-premise server) + **Flyway** for migrations
-- **Redis** (external server) — cache / rate limiting
+- **Redis** (external server) — cache
 - **springdoc-openapi** — Swagger documentation
 - **Lombok**
 - **JUnit 5 + Spring Boot Test + H2** — tests
@@ -17,48 +16,52 @@ Coeur platform backend API, built with Spring Boot 4 / Java 21, with authenticat
 
 ## Architecture
 
-The project is a single Maven artifact (`br.app.coeur:api`) organized as a **modular monolith**:
-each business module lives in its own top-level package under `br.app.coeur`, and
-[Spring Modulith](https://spring.io/projects/spring-modulith) verifies at test time
-(`ModularityTests`) that modules only reach each other through explicitly declared APIs —
-not just by convention. This keeps the codebase ready for new modules to be added later
-without their boundaries eroding over time.
+The project is a single Maven artifact (`br.app.coeur:api`) organized into business
+modules with simple layers. The main package contains `core`, `modules`, and `shared`.
 
 ```
 src/main/java/br/app/coeur/
-├── api/                  # OPEN module: cross-cutting configuration of the "api" artifact itself
-│   ├── config/           # CacheConfig, GlobalExceptionHandler, OpenApiConfig, WebConfig, ...
-│   ├── exception/        # Infrastructure-level exceptions (e.g. RateLimitExceededException)
-│   ├── filter/           # RateLimitingFilter
-│   └── health/           # Simple health check endpoint
-├── shared/               # OPEN module: shared kernel
-│   ├── exception/        # BusinessException, ConflictException, ResourceNotFoundException
-│   ├── persistence/      # BaseEntity (safe equals/hashCode for Hibernate proxies, auditable created_at/updated_at)
-│   ├── security/         # @CurrentUserId and its argument resolver
-│   └── util/             # JwtUtils
-├── identity/             # Login, refresh tokens, JWT/security configuration
-├── user/                 # User registration, lookup, update, and removal
-└── shopping/             # Shopping lists and item catalog
+├── core/                 # Application-wide configuration and HTTP infrastructure
+│   ├── config/           # Security, JWT keys, cache, CORS, errors, OpenAPI, MVC
+│   ├── controller/       # Health endpoint
+│   ├── filter/           # Rate limiting
+│   └── security/         # Current-user argument resolver
+├── modules/              # Business features
+│   ├── authentication/   # Login, refresh and logout
+│   ├── user/             # Profiles and user management
+│   └── shopping/         # Lists and item catalog
+└── shared/               # Small types reused across modules
+    ├── exception/        # BusinessException, ConflictException, ResourceNotFoundException
+    ├── model/            # Audited BaseEntity
+    ├── security/         # @CurrentUserId annotation
+    └── util/             # JWT helpers
 ```
 
-Each business module follows Clean Architecture layering internally:
+Each business module uses the same simple structure:
 
 ```
 <module>/
-├── domain/               # Entities with behavior, domain exceptions, repository ports (plain interfaces)
-├── application/          # Use-case services, transactions, request/response DTOs
-└── infrastructure/
-    ├── web/              # REST controllers
-    ├── persistence/      # Spring Data JPA repositories implementing the domain ports
-    └── config/           # Module-specific framework configuration (if any)
+├── controller/           # REST endpoints and request validation
+├── dto/
+│   ├── request/          # Input contracts
+│   └── response/         # Output contracts
+├── model/                # JPA entities and their invariants
+├── service/              # Business operations and transactions
+├── repository/           # Spring Data JPA interfaces and queries
+└── exception/            # Module-specific exceptions
 ```
 
-`api` and `shared` are declared as **open** Spring Modulith modules (`@ApplicationModule(type = OPEN)`),
-so any module can use them freely. Business modules are closed by default: only the `domain`
-package of a module is visible to others, and only when explicitly exposed as a
-`@NamedInterface`. Today `identity` is the only module that depends on another
-(`user::domain`, to look up the user during login/refresh); this dependency is declared
-explicitly in `identity/package-info.java` and enforced by `ModularityTests`.
+The normal flow is `controller -> service -> repository`; DTOs keep HTTP contracts
+separate from entities. Each repository extends `JpaRepository` directly. Services
+retain transaction boundaries and business behavior. Add module-local
+`config` or other folders only when a concrete need appears.
+
+`core` owns application infrastructure; `shared` contains only reusable types, without
+feature-specific logic. Authentication uses the user module's model and repository to
+look up accounts. The former ports/adapters and Spring Modulith metadata were removed
+in favor of these conventional packages. Tests mirror the packages under `src/test/java`.
+Redis entries use the `coeur:v2:` prefix to avoid reading DTOs serialized with the
+previous package names; old entries expire under their existing TTL.
 
 ## Authentication
 
@@ -66,14 +69,52 @@ explicitly in `identity/package-info.java` and enforced by `ModularityTests`.
 - Login and refresh token endpoints under `/api/v1/auth`.
 - Security configuration centralized in `SecurityConfig`.
 
+Access tokens last 15 minutes. Every user endpoint requires authentication, with no
+role-based permissions. Authenticated users can manage users and update their own
+name/email through `PUT /api/v1/users/me`. The existing `roles` field is retained for
+API compatibility and does not restrict access. Shopping lists remain scoped to their owner.
+
+Refresh tokens rotate under a database row lock, so concurrent requests cannot consume
+the same token twice. `POST /api/v1/auth/logout` accepts `{ "refreshToken": "..." }`
+and idempotently revokes that token (204). Already-issued access tokens remain valid
+until expiration. Login revokes the user's previous refresh tokens.
+
+JWT keys must be persistent and shared by every replica. Configure `JWT_PUBLIC_KEY`
+(X.509 PEM resource) and `JWT_PRIVATE_KEY` (PKCS#8 PEM resource). Development creates
+and saves the missing pair under `certs/`; tests use ephemeral keys. Production fails
+at startup if the pair is missing, incomplete, or mismatched. PEM files are gitignored.
+
+To provision a production pair once, in a protected directory:
+
+```bash
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out certs/jwt-private.pem
+openssl pkey -in certs/jwt-private.pem -pubout -out certs/jwt-public.pem
+```
+
+Keep the private key readable only by the application/deployment account. In Compose,
+`JWT_KEYS_DIRECTORY` is mounted read-only at `/run/secrets/coeur`; the container defaults
+to the `prod` Spring profile (`CONTAINER_SPRING_PROFILES_ACTIVE` overrides it).
+
+Rate limiting uses bounded in-memory buckets (30 requests per minute per client,
+10,000 clients maximum, five-minute idle expiration), independently on each replica.
+Health probes and CORS preflights are excluded. `X-Forwarded-For` is ignored unless
+the direct peer is in `TRUSTED_PROXIES` (exact IPs, comma-separated); trusted proxies
+must append/overwrite the forwarding chain. For a cluster-wide quota, enforce it at
+the gateway. Throttling returns Problem Details with status 429 and `Retry-After`.
+
+API errors use Problem Details `detail` and optional field-level `errors`. The frontend
+renders these fields; a `toast` extension is not required. Authorization failures return 403.
+
 ## Main endpoints
 
 | Method | Route | Description |
 |---|---|---|
 | POST | `/api/v1/auth/login` | Authenticates the user and issues tokens |
 | POST | `/api/v1/auth/refresh` | Renews the access token from a refresh token |
+| POST | `/api/v1/auth/logout` | Revokes the supplied refresh token |
 | POST | `/api/v1/users/register` | Registers a new user |
 | GET | `/api/v1/users/me` | Returns the authenticated user |
+| PUT | `/api/v1/users/me` | Updates own name/email without changing roles |
 | GET | `/api/v1/users` | Lists users (paginated) |
 | GET | `/api/v1/users/{id}` | Finds a user by ID |
 | PUT | `/api/v1/users/{id}` | Updates a user |
@@ -148,8 +189,8 @@ COMPOSE_PROFILES=prod docker compose up -d --build
 ```
 
 Persistence/integration tests use an in-memory H2 database and do not depend on the
-external Postgres. The suite also includes `ModularityTests`, which fails the build if a
-module boundary is violated.
+external Postgres. They cover authentication, profile updates, refresh-token rotation and
+concurrency; unit tests cover services, models, DTO validation and core infrastructure.
 
 ### Build
 

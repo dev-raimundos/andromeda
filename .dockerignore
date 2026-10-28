@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+certs
+target
+.idea
+.vscode
+.claude
+*.log
