@@ -29,7 +29,7 @@ public abstract class BaseEntity<I extends Serializable> {
     public abstract I getId();
 
     @Override
-    public final boolean equals(Object object) {
+    public boolean equals(Object object) {
 
         if (this == object) {
             return true;
@@ -57,7 +57,7 @@ public abstract class BaseEntity<I extends Serializable> {
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return this instanceof HibernateProxy proxy
                 ? proxy.getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
