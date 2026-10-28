@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
           cache: maven
 
       - name: Rodar testes
@@ -45,7 +45,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
           cache: maven
 
       - name: Cache SonarQube packages
@@ -77,12 +77,9 @@ jobs:
       - name: Disparar webhook de deploy do Dokploy
         run: |
           status=$(curl -sS -o resp.txt -w "%{http_code}" -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" \
-            -H "CF-Access-Client-Id: ${{ secrets.CF_ACCESS_CLIENT_ID }}" \
-            -H "CF-Access-Client-Secret: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}" \
             -H "Content-Type: application/json" \
             -H "X-GitHub-Event: push" \
             -d '{"ref":"refs/heads/main","repository":{"full_name":"${{ github.repository }}"}}')
           echo "HTTP $status"
           cat resp.txt
           [ "$status" -lt 400 ]
-
