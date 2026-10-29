@@ -16,6 +16,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class JwtKeyProvider {
@@ -23,7 +24,7 @@ public class JwtKeyProvider {
     private final JwtKeyService service;
     private final Clock clock;
     private final JwtKeyMaterialFactory materialFactory = new JwtKeyMaterialFactory();
-    private volatile CachedKey cached;
+    private final AtomicReference<CachedKey> cached = new AtomicReference<>();
 
     @Autowired
     public JwtKeyProvider(JwtKeyService service) {
@@ -33,7 +34,7 @@ public class JwtKeyProvider {
     JwtKeyProvider(JwtKeyService service, Clock clock) {
         this.service = service;
         this.clock = clock;
-        this.cached = load(service.initialize(), clock.instant().plus(CACHE_TTL));
+        this.cached.set(load(service.initialize(), clock.instant().plus(CACHE_TTL)));
     }
 
     public JwtEncoder jwtEncoder() {
@@ -51,24 +52,25 @@ public class JwtKeyProvider {
     @TransactionalEventListener
     public synchronized void onKeyRotated(JwtKeyService.KeyRotated event) {
         // Executed after commit: never cache key material from a rolled-back rotation.
-        cached = null;
+        cached.set(null);
     }
 
     private CachedKey current() {
-        CachedKey key = cached;
+        CachedKey key = cached.get();
         if (key != null && clock.instant().isBefore(key.expiresAt())) return key;
         return refresh();
     }
 
     private synchronized CachedKey refresh() {
         Instant now = clock.instant();
-        CachedKey key = cached;
+        CachedKey key = cached.get();
         if (key != null && now.isBefore(key.expiresAt())) return key;
         JwtSigningKey stored = service.getActiveKey();
-        cached = key != null && key.id().equals(stored.getKeyId())
+        CachedKey refreshed = key != null && key.id().equals(stored.getKeyId())
                 ? new CachedKey(key.id(), key.encoder(), key.decoder(), now.plus(CACHE_TTL))
                 : load(stored, now.plus(CACHE_TTL));
-        return cached;
+        cached.set(refreshed);
+        return refreshed;
     }
 
     private CachedKey load(JwtSigningKey stored, Instant expiresAt) {

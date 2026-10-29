@@ -15,6 +15,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -67,11 +72,13 @@ class JwtKeyProviderTest {
         when(service.getActiveKey()).thenReturn(replacement);
         first.onKeyRotated(new JwtKeyService.KeyRotated(replacement.getKeyId()));
         String newToken = token(first);
-        assertThatThrownBy(() -> first.jwtDecoder().decode(oldToken)).isInstanceOf(JwtException.class);
+        var firstDecoder = first.jwtDecoder();
+        assertThatThrownBy(() -> firstDecoder.decode(oldToken)).isInstanceOf(JwtException.class);
         when(clock.instant()).thenReturn(now.plusSeconds(5));
         assertThat(replica.jwtDecoder().decode(newToken).getHeaders())
                 .containsEntry("kid", replacement.getKeyId().toString());
-        assertThatThrownBy(() -> replica.jwtDecoder().decode(oldToken)).isInstanceOf(JwtException.class);
+        var replicaDecoder = replica.jwtDecoder();
+        assertThatThrownBy(() -> replicaDecoder.decode(oldToken)).isInstanceOf(JwtException.class);
     }
 
     @Test
@@ -92,5 +99,29 @@ class JwtKeyProviderTest {
         key.replace(key.getKeyId(), key.getPublicKey(), other.getPrivateKey(), now);
         assertThatThrownBy(() -> new JwtKeyProvider(service, clock))
                 .hasRootCauseMessage("JWT keys in the database do not match.");
+    }
+
+    @Test
+    void concurrentRequestsRefreshExpiredCacheOnlyOnce() throws Exception {
+        var provider = new JwtKeyProvider(service, clock);
+        String token = token(provider);
+        var decoder = provider.jwtDecoder();
+        when(service.getActiveKey()).thenReturn(key);
+        when(clock.instant()).thenReturn(now.plusSeconds(5));
+        var start = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(8)) {
+            var results = new ArrayList<Future<String>>();
+            for (int i = 0; i < 16; i++) {
+                results.add(executor.submit(() -> {
+                    start.await();
+                    return decoder.decode(token).getSubject();
+                }));
+            }
+            start.countDown();
+            for (var result : results) {
+                assertThat(result.get(10, TimeUnit.SECONDS)).isEqualTo("user");
+            }
+        }
+        verify(service, times(1)).getActiveKey();
     }
 }
