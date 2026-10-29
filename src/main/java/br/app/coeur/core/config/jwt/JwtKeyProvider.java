@@ -1,55 +1,41 @@
-package br.app.coeur.core.config;
+package br.app.coeur.core.config.jwt;
 
 import br.app.coeur.modules.authentication.model.JwtSigningKey;
 import br.app.coeur.modules.authentication.service.JwtKeyService;
 
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import java.security.KeyFactory;
-import java.security.Signature;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.UUID;
 
-@Configuration
-public class JwtKeyConfig {
+@Component
+public class JwtKeyProvider {
     private static final Duration CACHE_TTL = Duration.ofSeconds(5);
     private final JwtKeyService service;
     private final Clock clock;
+    private final JwtKeyMaterialFactory materialFactory = new JwtKeyMaterialFactory();
     private volatile CachedKey cached;
 
     @Autowired
-    public JwtKeyConfig(JwtKeyService service) {
+    public JwtKeyProvider(JwtKeyService service) {
         this(service, Clock.systemUTC());
     }
 
-    JwtKeyConfig(JwtKeyService service, Clock clock) {
+    JwtKeyProvider(JwtKeyService service, Clock clock) {
         this.service = service;
         this.clock = clock;
         this.cached = load(service.initialize(), clock.instant().plus(CACHE_TTL));
     }
 
-    @Bean
     public JwtEncoder jwtEncoder() {
         return parameters -> {
             CachedKey key = current();
@@ -58,7 +44,6 @@ public class JwtKeyConfig {
         };
     }
 
-    @Bean
     public JwtDecoder jwtDecoder() {
         return token -> current().decoder().decode(token);
     }
@@ -87,28 +72,8 @@ public class JwtKeyConfig {
     }
 
     private CachedKey load(JwtSigningKey stored, Instant expiresAt) {
-        try {
-            KeyFactory factory = KeyFactory.getInstance("RSA");
-            RSAPublicKey publicKey = (RSAPublicKey) factory.generatePublic(
-                    new X509EncodedKeySpec(Base64.getDecoder().decode(stored.getPublicKey())));
-            RSAPrivateKey privateKey = (RSAPrivateKey) factory.generatePrivate(
-                    new PKCS8EncodedKeySpec(Base64.getDecoder().decode(stored.getPrivateKey())));
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            byte[] challenge = new byte[]{1, 2, 3};
-            signature.initSign(privateKey);
-            signature.update(challenge);
-            byte[] signed = signature.sign();
-            signature.initVerify(publicKey);
-            signature.update(challenge);
-            if (!signature.verify(signed)) throw new IllegalStateException("JWT keys in the database do not match.");
-            RSAKey jwk = new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(stored.getKeyId().toString()).build();
-            JwtEncoder encoder = new NimbusJwtEncoder(new ImmutableJWKSet<>(new JWKSet(jwk)));
-            NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
-            decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer("coeur-api"));
-            return new CachedKey(stored.getKeyId(), encoder, decoder, expiresAt);
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to load JWT signing key from the database", e);
-        }
+        JwtKeyMaterial material = materialFactory.create(stored);
+        return new CachedKey(material.id(), material.encoder(), material.decoder(), expiresAt);
     }
 
     private record CachedKey(UUID id, JwtEncoder encoder, JwtDecoder decoder, Instant expiresAt) {
