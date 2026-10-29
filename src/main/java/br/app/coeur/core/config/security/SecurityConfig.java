@@ -26,6 +26,7 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
+    @SuppressWarnings("java:S4502") // Stateless JWT authentication; credentials are not sent via cookies.
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource,
                                                    RateLimitingFilter rateLimitingFilter) {
         http
