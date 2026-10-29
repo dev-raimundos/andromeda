@@ -4,6 +4,7 @@ import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ConflictException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -102,8 +103,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleUnexpected(Exception ex) {
-        log.error("[EXCEPTION] Unexpected error: {}", ex.getMessage(), ex);
+    public ProblemDetail handleUnexpected(Exception ex, HttpServletRequest request) {
+        log.error("[EXCEPTION] Unexpected error on {} {}: {}",
+                request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Internal server error."

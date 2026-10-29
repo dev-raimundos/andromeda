@@ -5,11 +5,15 @@ import br.app.coeur.shared.exception.ConflictException;
 import br.app.coeur.shared.exception.ResourceNotFoundException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.http.MockHttpInputMessage;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +23,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(OutputCaptureExtension.class)
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
@@ -92,10 +97,17 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void shouldHideInternalDetailsOnUnexpectedError() {
-        ProblemDetail problem = handler.handleUnexpected(new IllegalStateException("database password: 1234"));
+    void shouldHideInternalDetailsOnUnexpectedError(CapturedOutput output) {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/auth/login");
+        request.setQueryString("password=do-not-log-query");
+        request.setContent("do-not-log-body".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        ProblemDetail problem = handler.handleUnexpected(
+                new IllegalStateException("database failure", new IllegalStateException("missing column")), request);
 
         assertThat(problem.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        assertThat(problem.getDetail()).doesNotContain("1234");
+        assertThat(problem.getDetail()).isEqualTo("Internal server error.");
+        assertThat(output.getOut()).contains("POST /api/v1/auth/login", "Caused by:", "missing column")
+                .doesNotContain("do-not-log-query", "do-not-log-body");
     }
 }
