@@ -47,6 +47,7 @@ server:
   tomcat:
     accesslog:
       enabled: true
+      condition-unless: skipHealthAccessLog
       directory: /dev
       prefix: stdout
       suffix: ''
