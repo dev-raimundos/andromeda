@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.core.config.currentuser;
 
 import br.app.coeur.core.security.CurrentUserIdArgumentResolver;
 

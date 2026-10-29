@@ -115,7 +115,7 @@ public class RateLimitingFilter implements Filter {
             this.clock = clock;
             this.capacity = capacity;
             this.refillPeriodSeconds = refillPeriodSeconds;
-            this.tokens = (double) capacity;
+            this.tokens = capacity;
             this.lastRefill = clock.instant();
         }
 
@@ -137,7 +137,7 @@ public class RateLimitingFilter implements Filter {
             double elapsedSeconds = Duration.between(lastRefill, now).toMillis() / 1000.0;
             double tokensToAdd = elapsedSeconds * ((double) capacity / refillPeriodSeconds);
             if (tokensToAdd > 0) {
-                tokens = Math.min((double) capacity, tokens + tokensToAdd);
+                tokens = Math.min(capacity, tokens + tokensToAdd);
                 lastRefill = now;
             }
         }
