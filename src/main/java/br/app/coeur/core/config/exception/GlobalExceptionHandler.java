@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.core.config.exception;
 
 import br.app.coeur.shared.exception.BusinessException;
 import br.app.coeur.shared.exception.ConflictException;

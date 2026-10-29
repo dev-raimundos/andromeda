@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.core.config.security;
 
 import br.app.coeur.core.filter.RateLimitingFilter;
 

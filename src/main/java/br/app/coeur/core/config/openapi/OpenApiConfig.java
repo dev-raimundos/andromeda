@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.core.config.openapi;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

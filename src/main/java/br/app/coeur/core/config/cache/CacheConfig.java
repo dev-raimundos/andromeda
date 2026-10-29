@@ -1,4 +1,4 @@
-package br.app.coeur.core.config;
+package br.app.coeur.core.config.cache;
 
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
