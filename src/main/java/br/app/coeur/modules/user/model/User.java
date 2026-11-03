@@ -1,6 +1,7 @@
 package br.app.coeur.modules.user.model;
 
 import br.app.coeur.shared.model.BaseEntity;
+import br.app.coeur.shared.util.ValidationUtils;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -46,9 +47,9 @@ public class User extends BaseEntity<UUID> {
     }
 
     private User(String email, String password, String name) {
-        this.email = requireText(email, "Email is required.");
-        this.password = requireText(password, "Password is required.");
-        this.name = requireText(name, "Name is required.");
+        this.email = ValidationUtils.requireText(email, "Email is required.");
+        this.password = ValidationUtils.requireText(password, "Password is required.");
+        this.name = ValidationUtils.requireText(name, "Name is required.");
         this.roles = DEFAULT_ROLE;
     }
 
@@ -75,21 +76,14 @@ public class User extends BaseEntity<UUID> {
     }
 
     public void changeEmail(String email) {
-        this.email = requireText(email, "Email is required.");
+        this.email = ValidationUtils.requireText(email, "Email is required.");
     }
 
     public void rename(String name) {
-        this.name = requireText(name, "Name is required.");
+        this.name = ValidationUtils.requireText(name, "Name is required.");
     }
 
     public void changeRoles(String roles) {
-        this.roles = requireText(roles, "Roles are required.");
-    }
-
-    private static String requireText(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
-        }
-        return value;
+        this.roles = ValidationUtils.requireText(roles, "Roles are required.");
     }
 }

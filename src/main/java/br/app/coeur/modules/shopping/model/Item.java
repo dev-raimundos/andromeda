@@ -1,6 +1,7 @@
 package br.app.coeur.modules.shopping.model;
 
 import br.app.coeur.shared.model.BaseEntity;
+import br.app.coeur.shared.util.ValidationUtils;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,11 +41,11 @@ public class Item extends BaseEntity<UUID> {
     }
 
     private Item(String name, String description, Double price, String url, String brand) {
-        this.name = requireText(name, "Name is required.");
-        this.description = requireText(description, "Description is required.");
+        this.name = ValidationUtils.requireText(name, "Name is required.");
+        this.description = ValidationUtils.requireText(description, "Description is required.");
         this.price = requirePositive(price);
         this.url = url;
-        this.brand = requireText(brand, "Brand is required.");
+        this.brand = ValidationUtils.requireText(brand, "Brand is required.");
     }
 
     public static Item create(String name, String description, Double price, String url, String brand) {
@@ -52,11 +53,11 @@ public class Item extends BaseEntity<UUID> {
     }
 
     public void rename(String name) {
-        this.name = requireText(name, "Name is required.");
+        this.name = ValidationUtils.requireText(name, "Name is required.");
     }
 
     public void changeDescription(String description) {
-        this.description = requireText(description, "Description is required.");
+        this.description = ValidationUtils.requireText(description, "Description is required.");
     }
 
     public void changePrice(Double price) {
@@ -68,14 +69,7 @@ public class Item extends BaseEntity<UUID> {
     }
 
     public void changeBrand(String brand) {
-        this.brand = requireText(brand, "Brand is required.");
-    }
-
-    private static String requireText(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
-        }
-        return value;
+        this.brand = ValidationUtils.requireText(brand, "Brand is required.");
     }
 
     private static Double requirePositive(Double value) {

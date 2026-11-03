@@ -2,6 +2,7 @@ package br.app.coeur.modules.shopping.model;
 
 import br.app.coeur.modules.shopping.exception.ItemNotInShoppingListException;
 import br.app.coeur.shared.model.BaseEntity;
+import br.app.coeur.shared.util.ValidationUtils;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -41,8 +42,8 @@ public class ShoppingList extends BaseEntity<UUID> {
     }
 
     private ShoppingList(String name, UUID userId) {
-        this.name = requireText(name, "Name is required.");
-        this.userId = requireNonNull(userId, "User is required.");
+        this.name = ValidationUtils.requireText(name, "Name is required.");
+        this.userId = ValidationUtils.requireNonNull(userId, "User is required.");
     }
 
     public static ShoppingList create(String name, UUID userId) {
@@ -50,7 +51,7 @@ public class ShoppingList extends BaseEntity<UUID> {
     }
 
     public void rename(String name) {
-        this.name = requireText(name, "Name is required.");
+        this.name = ValidationUtils.requireText(name, "Name is required.");
     }
 
     public ShoppingListItem addItem(Item item, int quantity) {
@@ -81,19 +82,5 @@ public class ShoppingList extends BaseEntity<UUID> {
         return this.items.stream()
                 .filter(shoppingListItem -> shoppingListItem.getItem().equals(item))
                 .findFirst();
-    }
-
-    private static String requireText(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
-        }
-        return value;
-    }
-
-    private static UUID requireNonNull(UUID value, String message) {
-        if (value == null) {
-            throw new IllegalArgumentException(message);
-        }
-        return value;
     }
 }
