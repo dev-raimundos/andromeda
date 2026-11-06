@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS finances;
+
 CREATE TABLE finances.scope
 (
     id         UUID                        NOT NULL,
