@@ -53,8 +53,12 @@ public class JwtKeyService {
             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
             generator.initialize(2048);
             var pair = generator.generateKeyPair();
-            key.replace(UUID.randomUUID(), Base64.getEncoder().encodeToString(pair.getPublic().getEncoded()),
-                    Base64.getEncoder().encodeToString(pair.getPrivate().getEncoded()), Instant.now());
+            key.replace(
+                    UUID.randomUUID(),
+                    Base64.getEncoder().encodeToString(pair.getPublic().getEncoded()),
+                    Base64.getEncoder().encodeToString(pair.getPrivate().getEncoded()),
+                    Instant.now()
+            );
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException("Unable to generate JWT signing key", e);
         }
