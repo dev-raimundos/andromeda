@@ -1,65 +1,77 @@
 CREATE SCHEMA IF NOT EXISTS finances;
 
+-- SCOPE
 CREATE TABLE finances.scope
 (
-    id         UUID                        NOT NULL,
-    name       VARCHAR(255)                NOT NULL,
-    created_at TIMESTAMP(6) WITH TIME ZONE NOT NULL,
-    updated_at TIMESTAMP(6) WITH TIME ZONE NOT NULL,
+    id         UUID         NOT NULL,
+    name       VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ  NOT NULL,
+    updated_at TIMESTAMPTZ  NOT NULL,
+
     CONSTRAINT pk_scope PRIMARY KEY (id)
 );
 
+-- CATEGORY
 CREATE TABLE finances.category
 (
-    id         UUID                        NOT NULL,
-    scope_id   UUID                        NOT NULL,
-    name       VARCHAR(255)                NOT NULL,
-    created_at TIMESTAMP(6) WITH TIME ZONE NOT NULL,
-    updated_at TIMESTAMP(6) WITH TIME ZONE NOT NULL,
-    CONSTRAINT pk_category PRIMARY KEY (id)
+    id         UUID         NOT NULL,
+    scope_id   UUID         NOT NULL,
+    name       VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ  NOT NULL,
+    updated_at TIMESTAMPTZ  NOT NULL,
+
+    CONSTRAINT pk_category PRIMARY KEY (id),
+    CONSTRAINT fk_category_scope
+        FOREIGN KEY (scope_id)
+        REFERENCES finances.scope (id)
 );
 
-ALTER TABLE finances.category
-    ADD CONSTRAINT FK_CATEGORY_ON_SCOPE FOREIGN KEY (scope_id) REFERENCES finances.scope (id);
-
+-- SUBCATEGORY
 CREATE TABLE finances.subcategory
 (
-    id          UUID                        NOT NULL,
-    category_id UUID                        NOT NULL,
-    name        VARCHAR(255),               NOT NULL,
+    id          UUID         NOT NULL,
+    category_id UUID         NOT NULL,
+    name        VARCHAR(255) NOT NULL,
     description VARCHAR(255),
-    created_at  TIMESTAMP(6) WITH TIME ZONE NOT NULL,
-    updated_at  TIMESTAMP(6) WITH TIME ZONE NOT NULL,
-    CONSTRAINT pk_subcategory PRIMARY KEY (id)
+    created_at  TIMESTAMPTZ  NOT NULL,
+    updated_at  TIMESTAMPTZ  NOT NULL,
+
+    CONSTRAINT pk_subcategory PRIMARY KEY (id),
+    CONSTRAINT fk_subcategory_category
+        FOREIGN KEY (category_id)
+        REFERENCES finances.category (id)
 );
 
-ALTER TABLE finances.subcategory
-    ADD CONSTRAINT FK_SUBCATEGORY_ON_CATEGORY FOREIGN KEY (category_id) REFERENCES finances.category (id);
-
+-- LIST
 CREATE TABLE finances.list
 (
-    id              UUID                           NOT NULL,
-    reference_month TIMESTAMP(6) WITHOUT TIME ZONE NOT NULL,
-    created_at      TIMESTAMP(6) WITH TIME ZONE    NOT NULL,
-    updated_at      TIMESTAMP(6) WITH TIME ZONE    NOT NULL,
+    id              UUID        NOT NULL,
+    reference_month DATE        NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL,
+    updated_at      TIMESTAMPTZ NOT NULL,
+
     CONSTRAINT pk_list PRIMARY KEY (id)
 );
 
+-- ENTRY
 CREATE TABLE finances.entry
 (
-    id             UUID                        NOT NULL,
-    subcategory_id UUID                        NOT NULL,
-    list_id        UUID                        NOT NULL,
-    paid_at        TIMESTAMP(6) WITHOUT TIME ZONE,
+    id             UUID         NOT NULL,
+    subcategory_id UUID         NOT NULL,
+    list_id        UUID         NOT NULL,
+    paid_at        DATE,
     description    VARCHAR(255),
-    due_date       TIMESTAMP(6) WITHOUT TIME ZONE,
-    created_at     TIMESTAMP(6) WITH TIME ZONE NOT NULL,
-    updated_at     TIMESTAMP(6) WITH TIME ZONE NOT NULL,
-    CONSTRAINT pk_entry PRIMARY KEY (id)
+    due_date       DATE,
+    created_at     TIMESTAMPTZ  NOT NULL,
+    updated_at     TIMESTAMPTZ  NOT NULL,
+
+    CONSTRAINT pk_entry PRIMARY KEY (id),
+
+    CONSTRAINT fk_entry_list
+        FOREIGN KEY (list_id)
+        REFERENCES finances.list (id),
+
+    CONSTRAINT fk_entry_subcategory
+        FOREIGN KEY (subcategory_id)
+        REFERENCES finances.subcategory (id)
 );
-
-ALTER TABLE finances.entry
-    ADD CONSTRAINT FK_ENTRY_ON_LIST FOREIGN KEY (list_id) REFERENCES finances.list (id);
-
-ALTER TABLE finances.entry
-    ADD CONSTRAINT FK_ENTRY_ON_SUBCATEGORY FOREIGN KEY (subcategory_id) REFERENCES finances.subcategory (id);
